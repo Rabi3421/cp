@@ -1,14 +1,12 @@
-export interface Blog {
+export type News = {
   id: string
   title: string
   excerpt: string
   content: string
   image: string
+  category: string
   author: string
-  authorAvatar: string
   publishDate: string
   readTime: string
-  category: string
   tags: string[]
-  featured: boolean
 }
