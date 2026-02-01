@@ -3,7 +3,9 @@
 import { Key, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
+import { Icon } from '@iconify/react'
 import { HeaderItem } from '@/app/types/menu'
+import { useAuth } from '@/context/AuthContext'
 import Logo from './Logo'
 import HeaderLink from './Navigation/HeaderLink'
 import MobileHeaderLink from './Navigation/MobileHeaderLink'
@@ -11,8 +13,11 @@ import MobileHeaderLink from './Navigation/MobileHeaderLink'
 const Header: React.FC = () => {
   const [navbarOpen, setNavbarOpen] = useState(false)
   const [sticky, setSticky] = useState(false)
+  const [showProfileMenu, setShowProfileMenu] = useState(false)
+  const { user, logout } = useAuth()
 
   const mobileMenuRef = useRef<HTMLDivElement>(null)
+  const profileMenuRef = useRef<HTMLDivElement>(null)
 
   // 🔥 Local Header Navigation (CelebrityPersona)
   const headerData: HeaderItem[] = [
@@ -35,6 +40,13 @@ const Header: React.FC = () => {
     ) {
       setNavbarOpen(false)
     }
+    if (
+      profileMenuRef.current &&
+      !profileMenuRef.current.contains(event.target as Node) &&
+      showProfileMenu
+    ) {
+      setShowProfileMenu(false)
+    }
   }
 
   useEffect(() => {
@@ -44,7 +56,7 @@ const Header: React.FC = () => {
       window.removeEventListener('scroll', handleScroll)
       document.removeEventListener('mousedown', handleClickOutside)
     }
-  }, [navbarOpen])
+  }, [navbarOpen, showProfileMenu])
 
   useEffect(() => {
     document.body.style.overflow = navbarOpen ? 'hidden' : ''
@@ -112,11 +124,62 @@ const Header: React.FC = () => {
               </a>
             </div>
 
-            <Link href='/login' className='hidden lg:block'>
-              <button className='bg-transparent text-darkmode border border-darkmode px-4 py-2 rounded-lg hover:bg-darkmode hover:text-white transition'>
-                Sign In
-              </button>
-            </Link>
+            {user ? (
+              <div className='hidden lg:block relative' ref={profileMenuRef}>
+                <button
+                  onClick={() => setShowProfileMenu(!showProfileMenu)}
+                  className='flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-grey transition'>
+                  <Image
+                    src={user.avatar || '/images/team/user1.svg'}
+                    alt={user.name}
+                    width={32}
+                    height={32}
+                    className='rounded-full'
+                  />
+                  <span className='font-semibold'>{user.name}</span>
+                  <Icon icon='tabler:chevron-down' width='16' height='16' />
+                </button>
+
+                {showProfileMenu && (
+                  <div className='absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-gray-100 py-2 z-50'>
+                    <div className='px-4 py-3 border-b border-gray-100'>
+                      <p className='text-sm font-semibold'>{user.name}</p>
+                      <p className='text-xs text-gray-500'>{user.email}</p>
+                      <p className='text-xs text-primary mt-1 capitalize'>{user.role}</p>
+                    </div>
+                    <Link
+                      href={`/dashboard/${user.role === 'superadmin' ? 'superadmin' : user.role}`}
+                      className='flex items-center gap-2 px-4 py-2 hover:bg-grey transition'
+                      onClick={() => setShowProfileMenu(false)}>
+                      <Icon icon='mdi:view-dashboard' width='18' height='18' />
+                      <span className='text-sm'>Dashboard</span>
+                    </Link>
+                    <Link
+                      href='/dashboard/profile'
+                      className='flex items-center gap-2 px-4 py-2 hover:bg-grey transition'
+                      onClick={() => setShowProfileMenu(false)}>
+                      <Icon icon='mdi:account' width='18' height='18' />
+                      <span className='text-sm'>Profile</span>
+                    </Link>
+                    <button
+                      onClick={() => {
+                        logout()
+                        setShowProfileMenu(false)
+                      }}
+                      className='w-full flex items-center gap-2 px-4 py-2 hover:bg-red-50 text-red-600 transition'>
+                      <Icon icon='mdi:logout' width='18' height='18' />
+                      <span className='text-sm'>Logout</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <Link href='/signin' className='hidden lg:block'>
+                <button className='bg-transparent text-darkmode border border-darkmode px-4 py-2 rounded-lg hover:bg-darkmode hover:text-white transition'>
+                  Sign In
+                </button>
+              </Link>
+            )}
 
             {/* Mobile Toggle */}
             <button
@@ -193,21 +256,59 @@ const Header: React.FC = () => {
               </a>
             </div>
 
-            <Link
-              href='/login'
-              className='border border-primary text-primary px-4 py-2 rounded-lg text-center'
-              onClick={() => setNavbarOpen(false)}
-            >
-              Sign In
-            </Link>
+            {user ? (
+              <>
+                <div className='border-t border-white/20 pt-4 mt-4'>
+                  <div className='flex items-center gap-3 px-2 py-3'>
+                    <Image
+                      src={user.avatar || '/images/team/user1.svg'}
+                      alt={user.name}
+                      width={40}
+                      height={40}
+                      className='rounded-full'
+                    />
+                    <div>
+                      <p className='text-white font-semibold'>{user.name}</p>
+                      <p className='text-xs text-gray-300 capitalize'>{user.role}</p>
+                    </div>
+                  </div>
+                </div>
 
-            <Link
-              href='/register'
-              className='bg-primary text-white px-4 py-2 rounded-lg text-center'
-              onClick={() => setNavbarOpen(false)}
-            >
-              Create Account
-            </Link>
+                <Link
+                  href={`/dashboard/${user.role === 'superadmin' ? 'superadmin' : user.role}`}
+                  className='flex items-center gap-2 justify-center bg-primary text-white px-4 py-3 rounded-lg text-center'
+                  onClick={() => setNavbarOpen(false)}>
+                  <Icon icon='mdi:view-dashboard' width='20' height='20' />
+                  <span>Dashboard</span>
+                </Link>
+
+                <button
+                  onClick={() => {
+                    logout()
+                    setNavbarOpen(false)
+                  }}
+                  className='flex items-center gap-2 justify-center border border-red-500 text-red-500 px-4 py-3 rounded-lg'>
+                  <Icon icon='mdi:logout' width='20' height='20' />
+                  <span>Logout</span>
+                </button>
+              </>
+            ) : (
+              <>
+                <Link
+                  href='/signin'
+                  className='border border-primary text-primary px-4 py-2 rounded-lg text-center'
+                  onClick={() => setNavbarOpen(false)}>
+                  Sign In
+                </Link>
+
+                <Link
+                  href='/signup'
+                  className='bg-primary text-white px-4 py-2 rounded-lg text-center'
+                  onClick={() => setNavbarOpen(false)}>
+                  Create Account
+                </Link>
+              </>
+            )}
           </nav>
         </div>
       </div>

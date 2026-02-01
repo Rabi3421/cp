@@ -3,13 +3,13 @@ import Breadcrumb from '@/app/components/Common/Breadcrumb'
 import { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Sign Up | Property',
+  title: 'Sign Up | CelebrityPersona',
 }
 
 const SignupPage = () => {
   return (
     <>
-      <Breadcrumb pageName='Sign Up Page' />
+      <Breadcrumb pageName='Sign Up' />
 
       <SignUp />
     </>
