@@ -9,6 +9,7 @@ export type Celebrity = {
   height?: string
   nationality: string
   biography: string
+  introduction?: string
   earlyLife: string
   career: string
   personalLife: string

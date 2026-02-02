@@ -159,12 +159,17 @@ const CelebrityDetailPage = () => {
                 )}
               </div>
 
-              {/* Short Biography */}
+              {/* Short Biography / Introduction */}
               <div className='bg-white rounded-2xl p-8 shadow-xl'>
-                <h3 className='text-2xl font-bold mb-4'>Biography</h3>
-                <p className='text-lg text-gray-700 leading-relaxed'>
-                  {celebrity.biography}
-                </p>
+                <h3 className='text-2xl font-bold mb-4'>
+                  {celebrity.introduction ? 'Introduction' : 'Biography'}
+                </h3>
+                <div 
+                  className='text-lg text-gray-700 leading-relaxed prose prose-lg max-w-none'
+                  dangerouslySetInnerHTML={{ 
+                    __html: celebrity.introduction || celebrity.biography 
+                  }}
+                />
               </div>
             </div>
           </div>
@@ -214,9 +219,10 @@ const CelebrityDetailPage = () => {
                     <Icon icon='mdi:book-open-page-variant' width='32' height='32' className='text-primary' />
                     Early Life
                   </h2>
-                  <p className='text-lg text-gray-700 leading-relaxed'>
-                    {celebrity.earlyLife}
-                  </p>
+                  <div 
+                    className='text-lg text-gray-700 leading-relaxed prose prose-lg max-w-none'
+                    dangerouslySetInnerHTML={{ __html: celebrity.earlyLife }}
+                  />
                 </div>
 
                 <div>
@@ -224,9 +230,10 @@ const CelebrityDetailPage = () => {
                     <Icon icon='mdi:star-circle' width='32' height='32' className='text-primary' />
                     Career
                   </h2>
-                  <p className='text-lg text-gray-700 leading-relaxed'>
-                    {celebrity.career}
-                  </p>
+                  <div 
+                    className='text-lg text-gray-700 leading-relaxed prose prose-lg max-w-none'
+                    dangerouslySetInnerHTML={{ __html: celebrity.career }}
+                  />
                 </div>
 
                 <div>
@@ -234,9 +241,10 @@ const CelebrityDetailPage = () => {
                     <Icon icon='mdi:heart' width='32' height='32' className='text-primary' />
                     Personal Life
                   </h2>
-                  <p className='text-lg text-gray-700 leading-relaxed'>
-                    {celebrity.personalLife}
-                  </p>
+                  <div 
+                    className='text-lg text-gray-700 leading-relaxed prose prose-lg max-w-none'
+                    dangerouslySetInnerHTML={{ __html: celebrity.personalLife }}
+                  />
                 </div>
               </div>
             )}
