@@ -4,12 +4,19 @@ import { Icon } from '@iconify/react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useAuth } from '@/context/AuthContext'
+import { useState } from 'react'
+
+interface SubMenuItem {
+  label: string
+  href: string
+}
 
 interface MenuItem {
   icon: string
   label: string
-  href: string
+  href?: string
   roles: ('user' | 'admin' | 'superadmin')[]
+  submenu?: SubMenuItem[]
 }
 
 const menuItems: MenuItem[] = [
@@ -130,8 +137,14 @@ const superadminMenuItems: MenuItem[] = [
   {
     icon: 'mdi:folder-multiple',
     label: 'Content',
-    href: '/dashboard/superadmin/content',
     roles: ['superadmin'],
+    submenu: [
+      { label: 'Celebrity Profiles', href: '/dashboard/superadmin/content/celebrities' },
+      { label: 'Celebrity Outfits', href: '/dashboard/superadmin/content/outfits' },
+      { label: 'Celebrity News', href: '/dashboard/superadmin/content/news' },
+      { label: 'Upcoming Movies', href: '/dashboard/superadmin/content/movies' },
+      { label: 'Movie Reviews', href: '/dashboard/superadmin/content/reviews' },
+    ]
   },
   {
     icon: 'mdi:chart-bar',
@@ -156,6 +169,7 @@ const superadminMenuItems: MenuItem[] = [
 export default function Sidebar() {
   const pathname = usePathname()
   const { user, logout } = useAuth()
+  const [openSubmenu, setOpenSubmenu] = useState<string | null>(null)
 
   if (!user) return null
 
@@ -166,6 +180,10 @@ export default function Sidebar() {
     items = adminMenuItems
   } else {
     items = menuItems
+  }
+
+  const toggleSubmenu = (label: string) => {
+    setOpenSubmenu(openSubmenu === label ? null : label)
   }
 
   return (
@@ -179,10 +197,10 @@ export default function Sidebar() {
             className='w-12 h-12 rounded-full object-cover'
           />
           <div className='flex-1'>
-            <h3 className='font-semibold text-black dark:text-white truncate'>
+            <h3 className='text-lg font-bold text-black dark:text-white truncate'>
               {user.name}
             </h3>
-            <p className='text-xs text-gray-500 dark:text-gray-400 capitalize'>
+            <p className='text-sm text-gray-500 dark:text-gray-400 capitalize'>
               {user.role}
             </p>
           </div>
@@ -190,22 +208,69 @@ export default function Sidebar() {
       </div>
 
       {/* Navigation */}
-      <nav className='flex-1 p-4'>
+      <nav className='flex-1 p-4 overflow-y-auto'>
         <ul className='space-y-2'>
           {items.map((item) => {
-            const isActive = pathname === item.href
+            const isActive = item.href ? pathname === item.href : false
+            const hasSubmenu = item.submenu && item.submenu.length > 0
+            const isSubmenuOpen = openSubmenu === item.label
+            const isSubmenuItemActive = hasSubmenu && item.submenu?.some(sub => pathname === sub.href)
+            
             return (
-              <li key={item.href}>
-                <Link
-                  href={item.href}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-                    isActive
-                      ? 'bg-primary text-white'
-                      : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-900'
-                  }`}>
-                  <Icon icon={item.icon} width='20' height='20' />
-                  <span className='font-medium'>{item.label}</span>
-                </Link>
+              <li key={item.label}>
+                {hasSubmenu ? (
+                  <>
+                    <button
+                      onClick={() => toggleSubmenu(item.label)}
+                      className={`w-full flex items-center justify-between gap-3 px-4 py-3 rounded-lg transition-colors ${
+                        isSubmenuItemActive
+                          ? 'bg-primary/10 text-primary dark:text-primary'
+                          : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-900'
+                      }`}>
+                      <div className='flex items-center gap-3'>
+                        <Icon icon={item.icon} width='20' height='20' />
+                        <span className='font-medium'>{item.label}</span>
+                      </div>
+                      <Icon 
+                        icon={isSubmenuOpen ? 'mdi:chevron-up' : 'mdi:chevron-down'} 
+                        width='20' 
+                        height='20' 
+                      />
+                    </button>
+                    {isSubmenuOpen && (
+                      <ul className='mt-2 ml-4 space-y-1'>
+                        {item.submenu?.map((subItem) => {
+                          const isSubActive = pathname === subItem.href
+                          return (
+                            <li key={subItem.href}>
+                              <Link
+                                href={subItem.href}
+                                className={`flex items-center gap-3 px-4 py-2 rounded-lg text-sm transition-colors ${
+                                  isSubActive
+                                    ? 'bg-primary text-white'
+                                    : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-900'
+                                }`}>
+                                <Icon icon='mdi:circle-small' width='16' height='16' />
+                                <span>{subItem.label}</span>
+                              </Link>
+                            </li>
+                          )
+                        })}
+                      </ul>
+                    )}
+                  </>
+                ) : (
+                  <Link
+                    href={item.href!}
+                    className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+                      isActive
+                        ? 'bg-primary text-white'
+                        : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-900'
+                    }`}>
+                    <Icon icon={item.icon} width='20' height='20' />
+                    <span className='font-medium'>{item.label}</span>
+                  </Link>
+                )}
               </li>
             )
           })}
