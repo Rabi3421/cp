@@ -67,7 +67,7 @@ export default function UserDashboard() {
       <div className='space-y-6'>
         {/* Header */}
         <div>
-          <h1 className='text-3xl font-bold text-black dark:text-white'>
+          <h1 className='text-2xl sm:text-3xl font-bold text-black dark:text-white'>
             Dashboard
           </h1>
           <p className='text-gray-600 dark:text-gray-400 mt-1'>
@@ -76,11 +76,11 @@ export default function UserDashboard() {
         </div>
 
         {/* Stats Grid */}
-        <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6'>
+        <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6'>
           {stats.map((stat) => (
             <div
               key={stat.label}
-              className='bg-white dark:bg-black rounded-3xl shadow-xl p-6 border border-gray-200 dark:border-gray-800'>
+              className='bg-white dark:bg-black rounded-3xl shadow-xl p-4 sm:p-6 border border-gray-200 dark:border-gray-800'>
               <div className='flex items-center gap-4'>
                 <div className={`${stat.bgColor} p-3 rounded-2xl`}>
                   <Icon
@@ -94,7 +94,7 @@ export default function UserDashboard() {
                   <p className='text-gray-600 dark:text-gray-400 text-sm'>
                     {stat.label}
                   </p>
-                  <p className='text-2xl font-bold text-black dark:text-white'>
+                  <p className='text-xl sm:text-2xl font-bold text-black dark:text-white'>
                     {stat.value}
                   </p>
                 </div>
@@ -104,8 +104,8 @@ export default function UserDashboard() {
         </div>
 
         {/* Recent Activity */}
-        <div className='bg-white dark:bg-black rounded-3xl shadow-xl p-6 border border-gray-200 dark:border-gray-800'>
-          <h2 className='text-xl font-bold text-black dark:text-white mb-4'>
+        <div className='bg-white dark:bg-black rounded-3xl shadow-xl p-4 sm:p-6 border border-gray-200 dark:border-gray-800'>
+          <h2 className='text-lg sm:text-xl font-bold text-black dark:text-white mb-4'>
             Recent Activity
           </h2>
           <div className='space-y-4'>
@@ -138,8 +138,8 @@ export default function UserDashboard() {
         </div>
 
         {/* Quick Actions */}
-        <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
-          <div className='bg-white dark:bg-black rounded-3xl shadow-xl p-6 border border-gray-200 dark:border-gray-800'>
+        <div className='grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6'>
+          <div className='bg-white dark:bg-black rounded-3xl shadow-xl p-4 sm:p-6 border border-gray-200 dark:border-gray-800'>
             <h3 className='text-lg font-bold text-black dark:text-white mb-4'>
               Quick Actions
             </h3>
@@ -159,7 +159,7 @@ export default function UserDashboard() {
             </div>
           </div>
 
-          <div className='bg-white dark:bg-black rounded-3xl shadow-xl p-6 border border-gray-200 dark:border-gray-800'>
+          <div className='bg-white dark:bg-black rounded-3xl shadow-xl p-4 sm:p-6 border border-gray-200 dark:border-gray-800'>
             <h3 className='text-lg font-bold text-black dark:text-white mb-4'>
               Popular This Week
             </h3>

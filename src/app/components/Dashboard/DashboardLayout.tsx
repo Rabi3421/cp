@@ -2,8 +2,9 @@
 
 import { useAuth } from '@/context/AuthContext'
 import { useRouter } from 'next/navigation'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import Sidebar from './Sidebar'
+import Header from './Header'
 import Loader from '../Common/Loader'
 
 interface DashboardLayoutProps {
@@ -17,6 +18,7 @@ export default function DashboardLayout({
 }: DashboardLayoutProps) {
   const { user, loading } = useAuth()
   const router = useRouter()
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
   useEffect(() => {
     if (!loading && !user) {
@@ -47,9 +49,26 @@ export default function DashboardLayout({
   }
 
   return (
-    <div className='flex min-h-screen bg-gray-50 dark:bg-gray-950'>
-      <Sidebar />
-      <main className='flex-1 p-8'>{children}</main>
+    <div className='flex h-screen overflow-hidden bg-gray-50 dark:bg-gray-950'>
+      {/* Mobile backdrop */}
+      {isMobileMenuOpen && (
+        <div
+          className='fixed inset-0 bg-black/50 z-40 lg:hidden'
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+      )}
+      
+      {/* Sidebar */}
+      <Sidebar 
+        isMobileMenuOpen={isMobileMenuOpen} 
+        setIsMobileMenuOpen={setIsMobileMenuOpen} 
+      />
+      
+      {/* Main content */}
+      <div className='flex-1 flex flex-col h-screen overflow-hidden'>
+        <Header onMenuClick={() => setIsMobileMenuOpen(true)} />
+        <main className='flex-1 p-4 sm:p-6 md:p-8 overflow-y-auto'>{children}</main>
+      </div>
     </div>
   )
 }

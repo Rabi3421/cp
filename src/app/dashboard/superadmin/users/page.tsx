@@ -190,7 +190,7 @@ export default function SuperadminUsersPage() {
         {/* Header */}
         <div className='flex items-center justify-between'>
           <div>
-            <h1 className='text-3xl font-bold text-black dark:text-white'>
+            <h1 className='text-2xl sm:text-3xl font-bold text-black dark:text-white'>
               All Users
             </h1>
             <p className='text-gray-600 dark:text-gray-400 mt-1'>
@@ -206,7 +206,7 @@ export default function SuperadminUsersPage() {
         </div>
 
         {/* Stats */}
-        <div className='grid grid-cols-1 md:grid-cols-4 gap-4'>
+        <div className='grid grid-cols-1 md:grid-cols-4 gap-4 sm:gap-6'>
           <div className='bg-white dark:bg-black rounded-2xl shadow-lg p-4 border border-gray-200 dark:border-gray-800'>
             <p className='text-gray-600 dark:text-gray-400 text-sm mb-1'>
               Total Users
@@ -236,7 +236,7 @@ export default function SuperadminUsersPage() {
         </div>
 
         {/* Filters */}
-        <div className='bg-white dark:bg-black rounded-3xl shadow-xl p-6 border border-gray-200 dark:border-gray-800'>
+        <div className='bg-white dark:bg-black rounded-3xl shadow-xl p-4 sm:p-6 border border-gray-200 dark:border-gray-800'>
           <div className='flex flex-col md:flex-row gap-4'>
             <div className='flex-1'>
               <div className='relative'>
@@ -255,7 +255,7 @@ export default function SuperadminUsersPage() {
                 />
               </div>
             </div>
-            <div className='flex gap-3'>
+            <div className='flex flex-wrap gap-2 sm:gap-3'>
               <button
                 onClick={() => setRoleFilter('all')}
                 className={`px-4 py-2 rounded-xl font-medium transition-colors ${
