@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import dbConnect from '@/lib/mongodb'
 import Celebrity from '@/models/Celebrity'
-import { verifyToken } from '@/lib/auth'
+import { authenticate, authorizeRole } from '@/lib/auth'
 
 // GET - Fetch all celebrities with pagination, search, and filters
 export async function GET(request: NextRequest) {
@@ -102,19 +102,20 @@ export async function GET(request: NextRequest) {
 // POST - Create new celebrity
 export async function POST(request: NextRequest) {
   try {
-    // Verify superadmin token
-    const token = request.cookies.get('accessToken')?.value
-    if (!token) {
+    // Verify superadmin authentication
+    const auth = authenticate(request)
+    if (!auth.authenticated || !auth.user) {
       return NextResponse.json(
-        { success: false, error: 'Unauthorized' },
+        { success: false, error: auth.error || 'Unauthorized' },
         { status: 401 }
       )
     }
 
-    const decoded = await verifyToken(token)
-    if (!decoded || decoded.role !== 'superadmin') {
+    // Check superadmin role
+    const roleCheck = authorizeRole(['superadmin'], auth.user)
+    if (!roleCheck.authorized) {
       return NextResponse.json(
-        { success: false, error: 'Forbidden' },
+        { success: false, error: roleCheck.error || 'Forbidden' },
         { status: 403 }
       )
     }

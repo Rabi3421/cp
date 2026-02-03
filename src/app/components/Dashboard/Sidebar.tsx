@@ -175,7 +175,7 @@ export default function Sidebar({ isMobileMenuOpen, setIsMobileMenuOpen }: Sideb
   const pathname = usePathname()
   const { user } = useAuth()
   const [openSubmenu, setOpenSubmenu] = useState<string | null>(null)
-
+  console.log('Current user:', user)
   if (!user) return null
 
   let items: MenuItem[] = []
@@ -210,7 +210,7 @@ export default function Sidebar({ isMobileMenuOpen, setIsMobileMenuOpen }: Sideb
       </div>
       
       {/* User Info */}
-      <div className='p-4 sm:p-6 border-b border-gray-200 dark:border-gray-800'>
+      <div className='p-4 sm:p-5 border-b border-gray-200 dark:border-gray-800'>
         <div className='flex items-center gap-3'>
           <img
             src={user.avatar || '/images/team/user1.svg'}

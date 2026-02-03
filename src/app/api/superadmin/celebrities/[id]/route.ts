@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import dbConnect from '@/lib/mongodb'
 import Celebrity from '@/models/Celebrity'
-import { verifyToken } from '@/lib/auth'
+import { authenticate, authorizeRole } from '@/lib/auth'
 
 // GET - Fetch single celebrity by ID
 export async function GET(
@@ -39,19 +39,20 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
-    // Verify superadmin token
-    const token = request.cookies.get('accessToken')?.value
-    if (!token) {
+    // Verify superadmin authentication
+    const auth = authenticate(request)
+    if (!auth.authenticated || !auth.user) {
       return NextResponse.json(
-        { success: false, error: 'Unauthorized' },
+        { success: false, error: auth.error || 'Unauthorized' },
         { status: 401 }
       )
     }
 
-    const decoded = await verifyToken(token)
-    if (!decoded || decoded.role !== 'superadmin') {
+    // Check superadmin role
+    const roleCheck = authorizeRole(['superadmin'], auth.user)
+    if (!roleCheck.authorized) {
       return NextResponse.json(
-        { success: false, error: 'Forbidden' },
+        { success: false, error: roleCheck.error || 'Forbidden' },
         { status: 403 }
       )
     }
@@ -115,19 +116,20 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    // Verify superadmin token
-    const token = request.cookies.get('accessToken')?.value
-    if (!token) {
+    // Verify superadmin authentication
+    const auth = authenticate(request)
+    if (!auth.authenticated || !auth.user) {
       return NextResponse.json(
-        { success: false, error: 'Unauthorized' },
+        { success: false, error: auth.error || 'Unauthorized' },
         { status: 401 }
       )
     }
 
-    const decoded = await verifyToken(token)
-    if (!decoded || decoded.role !== 'superadmin') {
+    // Check superadmin role
+    const roleCheck = authorizeRole(['superadmin'], auth.user)
+    if (!roleCheck.authorized) {
       return NextResponse.json(
-        { success: false, error: 'Forbidden' },
+        { success: false, error: roleCheck.error || 'Forbidden' },
         { status: 403 }
       )
     }
