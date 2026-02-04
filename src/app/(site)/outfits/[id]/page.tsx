@@ -18,7 +18,7 @@ const OutfitDetailPage = () => {
         if (!res.ok) throw new Error('Failed to fetch')
         const data = await res.json()
         const foundOutfit = data.OutfitsData?.find(
-          (o: Outfit) => o.id === params.id
+          (o: Outfit) => o._id === params.id
         )
         setOutfit(foundOutfit || null)
       } catch (error) {
@@ -74,7 +74,7 @@ const OutfitDetailPage = () => {
             {/* Left: Image */}
             <div className='relative h-[600px] rounded-3xl overflow-hidden shadow-xl'>
               <Image
-                src={outfit.image}
+                src={outfit.images[0] || '/images/placeholder.jpg'}
                 alt={outfit.title}
                 fill
                 className='object-cover'
@@ -89,93 +89,131 @@ const OutfitDetailPage = () => {
 
               <h1 className='text-4xl md:text-5xl font-bold mb-4'>{outfit.title}</h1>
               
-              <Link href={`/celebrities/${outfit.celebrityId}`} className='inline-flex items-center gap-2 text-xl text-gray-600 hover:text-primary transition mb-4'>
-                <Icon icon='mdi:account' width='24' height='24' />
-                {outfit.celebrity}
-              </Link>
+              {typeof outfit.celebrity === 'object' && (
+                <Link 
+                  href={`/celebrities/${outfit.celebrity.slug}`} 
+                  className='inline-flex items-center gap-2 text-xl text-gray-600 hover:text-primary transition mb-4'
+                >
+                  <Icon icon='mdi:account' width='24' height='24' />
+                  {outfit.celebrity.name}
+                </Link>
+              )}
 
               <div className='flex items-center gap-6 mb-6'>
                 <div className='flex items-center gap-2 text-gray-600'>
                   <Icon icon='mdi:calendar' width='20' height='20' />
-                  <span>{outfit.date}</span>
+                  <span>{outfit.year}</span>
                 </div>
-                {outfit.totalCost && (
+                {outfit.price && (
                   <div className='flex items-center gap-2'>
                     <Icon icon='mdi:tag' width='20' height='20' className='text-primary' />
-                    <span className='text-2xl font-bold text-primary'>{outfit.totalCost}</span>
+                    <span className='text-2xl font-bold text-primary'>{outfit.price}</span>
                   </div>
                 )}
               </div>
 
-              <p className='text-lg text-gray-700 leading-relaxed mb-8'>
-                {outfit.description}
-              </p>
+              <div 
+                className='prose prose-lg max-w-none mb-8'
+                dangerouslySetInnerHTML={{ __html: outfit.description }}
+              />
+
+              {/* Stats */}
+              <div className='flex items-center gap-6 mb-8'>
+                <div className='flex items-center gap-2 text-gray-600'>
+                  <Icon icon='mdi:eye' width='20' height='20' />
+                  <span>{outfit.viewCount}</span>
+                </div>
+                <div className='flex items-center gap-2 text-gray-600'>
+                  <Icon icon='mdi:heart' width='20' height='20' />
+                  <span>{outfit.likesCount}</span>
+                </div>
+                <div className='flex items-center gap-2 text-gray-600'>
+                  <Icon icon='mdi:share' width='20' height='20' />
+                  <span>{outfit.shareCount}</span>
+                </div>
+              </div>
+
+              {/* Details */}
+              <div className='space-y-3 mb-8'>
+                {outfit.designer && (
+                  <div className='flex items-center gap-2'>
+                    <Icon icon='mdi:pencil-ruler' width='20' height='20' className='text-primary' />
+                    <span className='font-semibold'>Designer:</span>
+                    <span>{outfit.designer}</span>
+                  </div>
+                )}
+                {outfit.brand && (
+                  <div className='flex items-center gap-2'>
+                    <Icon icon='mdi:tag-text' width='20' height='20' className='text-primary' />
+                    <span className='font-semibold'>Brand:</span>
+                    <span>{outfit.brand}</span>
+                  </div>
+                )}
+                {outfit.category && (
+                  <div className='flex items-center gap-2'>
+                    <Icon icon='mdi:shape' width='20' height='20' className='text-primary' />
+                    <span className='font-semibold'>Category:</span>
+                    <span>{outfit.category}</span>
+                  </div>
+                )}
+                {outfit.color && (
+                  <div className='flex items-center gap-2'>
+                    <Icon icon='mdi:palette' width='20' height='20' className='text-primary' />
+                    <span className='font-semibold'>Color:</span>
+                    <span>{outfit.color}</span>
+                  </div>
+                )}
+              </div>
 
               {/* Tags */}
-              <div className='flex flex-wrap gap-2'>
+              <div className='flex flex-wrap gap-2 mb-8'>
                 {outfit.tags.map((tag, index) => (
                   <span
                     key={index}
                     className='bg-grey px-4 py-2 rounded-full text-sm font-semibold'>
-                    {tag}
+                    #{tag}
                   </span>
                 ))}
               </div>
+
+              {/* Purchase Link */}
+              {outfit.purchaseLink && (
+                <a
+                  href={outfit.purchaseLink}
+                  target='_blank'
+                  rel='noopener noreferrer'
+                  className='inline-flex items-center gap-2 bg-primary text-white px-8 py-4 rounded-full font-semibold hover:bg-darkmode transition'>
+                  <Icon icon='mdi:shopping' width='24' height='24' />
+                  Shop This Look
+                </a>
+              )}
             </div>
           </div>
         </div>
       </section>
 
-      {/* Outfit Items */}
-      <section className='py-20'>
-        <div className='container mx-auto max-w-7xl px-4'>
-          <h2 className='text-3xl font-bold mb-12 text-center flex items-center justify-center gap-3'>
-            <Icon icon='mdi:shopping' width='32' height='32' className='text-primary' />
-            Shop The Look
-          </h2>
-
-          <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6'>
-            {outfit.items.map((item, index) => (
-              <div
-                key={index}
-                className='bg-white rounded-3xl p-6 shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-2'>
-                {item.image && (
-                  <div className='relative w-full h-48 mb-4 overflow-hidden rounded-2xl bg-grey'>
-                    <Image
-                      src={item.image}
-                      alt={item.name}
-                      fill
-                      className='object-cover'
-                    />
-                  </div>
-                )}
-                
-                <div className='mb-2'>
-                  <span className='text-xs font-semibold text-primary uppercase tracking-wider'>
-                    {item.category}
-                  </span>
+      {/* Image Gallery */}
+      {outfit.images.length > 1 && (
+        <section className='py-20'>
+          <div className='container mx-auto max-w-7xl px-4'>
+            <h2 className='text-3xl font-bold mb-12 text-center'>More Photos</h2>
+            <div className='grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6'>
+              {outfit.images.slice(1).map((image, index) => (
+                <div
+                  key={index}
+                  className='relative h-64 rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow'>
+                  <Image
+                    src={image}
+                    alt={`${outfit.title} - Image ${index + 2}`}
+                    fill
+                    className='object-cover'
+                  />
                 </div>
-                
-                <h3 className='text-lg font-bold mb-2'>{item.name}</h3>
-                <p className='text-gray-600 mb-3 text-sm'>{item.brand}</p>
-                
-                <div className='flex items-center justify-between'>
-                  <span className='text-xl font-bold text-primary'>{item.price}</span>
-                  {item.link && (
-                    <a
-                      href={item.link}
-                      target='_blank'
-                      rel='noopener noreferrer'
-                      className='bg-primary text-white p-2 rounded-full hover:bg-darkmode transition'>
-                      <Icon icon='mdi:cart' width='20' height='20' />
-                    </a>
-                  )}
-                </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* Related Section */}
       <section className='py-20 bg-grey'>

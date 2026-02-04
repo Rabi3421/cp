@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import dbConnect from '@/lib/mongodb'
-import Celebrity from '@/models/Celebrity'
+import Outfit from '@/models/Outfit'
 import { authenticate, authorizeRole } from '@/lib/auth'
 
-// GET - Fetch single celebrity by ID
+// GET - Fetch single outfit by ID
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -12,21 +12,24 @@ export async function GET(
     await dbConnect()
     const { id } = await params
 
-    const celebrity = await Celebrity.findById(id)
+    const outfit = await Outfit.findById(id).populate(
+      'celebrity',
+      'name slug profileImage'
+    )
 
-    if (!celebrity) {
+    if (!outfit) {
       return NextResponse.json(
-        { success: false, error: 'Celebrity not found' },
+        { success: false, error: 'Outfit not found' },
         { status: 404 }
       )
     }
 
     return NextResponse.json({
       success: true,
-      data: celebrity,
+      data: outfit,
     })
   } catch (error: any) {
-    console.error('Error fetching celebrity:', error)
+    console.error('Error fetching outfit:', error)
     return NextResponse.json(
       { success: false, error: error.message },
       { status: 500 }
@@ -34,7 +37,7 @@ export async function GET(
   }
 }
 
-// PUT - Update celebrity
+// PUT - Update outfit
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -65,13 +68,13 @@ export async function PUT(
 
     // If slug is being updated, check for duplicates
     if (body.slug) {
-      const existingCelebrity = await Celebrity.findOne({
+      const existingOutfit = await Outfit.findOne({
         slug: body.slug,
         _id: { $ne: id },
       })
-      if (existingCelebrity) {
+      if (existingOutfit) {
         return NextResponse.json(
-          { success: false, error: 'Celebrity with this slug already exists' },
+          { success: false, error: 'Outfit with this slug already exists' },
           { status: 400 }
         )
       }
@@ -85,26 +88,26 @@ export async function PUT(
       body.publishAt = null
     }
 
-    const celebrity = await Celebrity.findByIdAndUpdate(
+    const outfit = await Outfit.findByIdAndUpdate(
       id,
       { ...body, updatedAt: new Date() },
       { new: true, runValidators: true }
-    )
+    ).populate('celebrity', 'name slug profileImage')
 
-    if (!celebrity) {
+    if (!outfit) {
       return NextResponse.json(
-        { success: false, error: 'Celebrity not found' },
+        { success: false, error: 'Outfit not found' },
         { status: 404 }
       )
     }
 
     return NextResponse.json({
       success: true,
-      data: celebrity,
-      message: 'Celebrity updated successfully',
+      data: outfit,
+      message: 'Outfit updated successfully',
     })
   } catch (error: any) {
-    console.error('Error updating celebrity:', error)
+    console.error('Error updating outfit:', error)
     return NextResponse.json(
       { success: false, error: error.message },
       { status: 500 }
@@ -112,7 +115,7 @@ export async function PUT(
   }
 }
 
-// DELETE - Delete celebrity
+// DELETE - Delete outfit
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -139,21 +142,21 @@ export async function DELETE(
     await dbConnect()
     const { id } = await params
 
-    const celebrity = await Celebrity.findByIdAndDelete(id)
+    const outfit = await Outfit.findByIdAndDelete(id)
 
-    if (!celebrity) {
+    if (!outfit) {
       return NextResponse.json(
-        { success: false, error: 'Celebrity not found' },
+        { success: false, error: 'Outfit not found' },
         { status: 404 }
       )
     }
 
     return NextResponse.json({
       success: true,
-      message: 'Celebrity deleted successfully',
+      message: 'Outfit deleted successfully',
     })
   } catch (error: any) {
-    console.error('Error deleting celebrity:', error)
+    console.error('Error deleting outfit:', error)
     return NextResponse.json(
       { success: false, error: error.message },
       { status: 500 }

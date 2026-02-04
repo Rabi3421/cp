@@ -26,11 +26,16 @@ const OutfitsPage = () => {
     fetchData()
   }, [])
 
-  const filteredOutfits = outfits.filter((outfit) =>
-    outfit.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    outfit.celebrity.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    outfit.event.toLowerCase().includes(searchQuery.toLowerCase())
-  )
+  const filteredOutfits = outfits.filter((outfit) => {
+    const celebrityName = typeof outfit.celebrity === 'object' 
+      ? outfit.celebrity.name 
+      : outfit.celebrity
+    return (
+      outfit.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      celebrityName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      outfit.event.toLowerCase().includes(searchQuery.toLowerCase())
+    )
+  })
 
   return (
     <main>
@@ -90,13 +95,13 @@ const OutfitsPage = () => {
             <div className='grid grid-cols-1 md:grid-cols-2 gap-8'>
               {filteredOutfits.map((outfit) => (
                 <Link
-                  key={outfit.id}
-                  href={`/outfits/${outfit.id}`}
+                  key={outfit._id}
+                  href={`/outfits/${outfit._id}`}
                   className='group'>
                   <div className='bg-white rounded-3xl p-6 shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-2'>
                     <div className='relative w-full h-96 mb-6 overflow-hidden rounded-2xl'>
                       <Image
-                        src={outfit.image}
+                        src={outfit.images[0] || '/images/placeholder.jpg'}
                         alt={outfit.title}
                         fill
                         className='object-cover group-hover:scale-110 transition-transform duration-300'
@@ -104,9 +109,9 @@ const OutfitsPage = () => {
                       <div className='absolute top-4 left-4 bg-primary text-white px-4 py-2 rounded-full text-sm font-semibold'>
                         {outfit.event}
                       </div>
-                      {outfit.totalCost && (
+                      {outfit.price && (
                         <div className='absolute top-4 right-4 bg-white/90 backdrop-blur text-darkmode px-4 py-2 rounded-full text-sm font-bold'>
-                          {outfit.totalCost}
+                          {outfit.price}
                         </div>
                       )}
                     </div>
@@ -117,22 +122,25 @@ const OutfitsPage = () => {
                     
                     <div className='flex items-center gap-2 mb-4'>
                       <Icon icon='mdi:account' width='20' height='20' className='text-gray-500' />
-                      <span className='text-gray-600 font-semibold'>{outfit.celebrity}</span>
+                      <span className='text-gray-600 font-semibold'>
+                        {typeof outfit.celebrity === 'object' ? outfit.celebrity.name : outfit.celebrity}
+                      </span>
                     </div>
                     
-                    <p className='text-gray-600 mb-4 line-clamp-2'>
-                      {outfit.description}
-                    </p>
+                    <div 
+                      className='text-gray-600 mb-4 line-clamp-2'
+                      dangerouslySetInnerHTML={{ __html: outfit.description }}
+                    />
                     
                     <div className='flex items-center justify-between'>
                       <span className='text-primary font-semibold flex items-center gap-1'>
-                        Decode Outfit
+                        View Outfit
                         <Icon icon='tabler:chevron-right' width='20' height='20' />
                       </span>
                       
                       <div className='flex items-center gap-1 text-sm text-gray-500'>
-                        <Icon icon='mdi:hanger' width='16' height='16' />
-                        <span>{outfit.items.length} items</span>
+                        <Icon icon='mdi:image-multiple' width='16' height='16' />
+                        <span>{outfit.images.length} photos</span>
                       </div>
                     </div>
                   </div>

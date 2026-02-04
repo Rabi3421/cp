@@ -404,86 +404,8 @@ const CelebritiesData: Celebrity[] = [
   },
 ]
 
-// outfits data
-const OutfitsData: Outfit[] = [
-  {
-    id: 'emma-watson-red-carpet-2024',
-    title: 'Emma Watson\'s Stunning Red Carpet Look',
-    celebrity: 'Emma Watson',
-    celebrityId: 'emma-watson',
-    image: '/images/featured/feat1.jpg',
-    event: 'Met Gala 2024',
-    date: 'May 6, 2024',
-    description: 'Emma Watson turned heads at the Met Gala 2024 with this breathtaking sustainable fashion ensemble. The outfit perfectly combines elegance with environmental consciousness.',
-    items: [
-      {
-        name: 'Sustainable Evening Gown',
-        brand: 'Stella McCartney',
-        category: 'Dress',
-        price: '$8,500',
-        image: '/images/featured/feat1.jpg',
-      },
-      {
-        name: 'Diamond Drop Earrings',
-        brand: 'Chopard',
-        category: 'Jewelry',
-        price: '$12,000',
-      },
-      {
-        name: 'Satin Clutch',
-        brand: 'Gucci',
-        category: 'Accessories',
-        price: '$2,800',
-      },
-      {
-        name: 'Classic Pumps',
-        brand: 'Christian Louboutin',
-        category: 'Shoes',
-        price: '$1,200',
-      },
-    ],
-    totalCost: '$24,500',
-    tags: ['Red Carpet', 'Met Gala', 'Sustainable Fashion', 'Evening Wear'],
-  },
-  {
-    id: 'zendaya-street-style',
-    title: 'Zendaya\'s Effortless Street Style',
-    celebrity: 'Zendaya',
-    celebrityId: 'zendaya',
-    image: '/images/featured/feat2.jpg',
-    event: 'NYC Street Style',
-    date: 'March 15, 2024',
-    description: 'Zendaya showcases her signature street style with this casual yet chic ensemble perfect for everyday wear.',
-    items: [
-      {
-        name: 'Oversized Blazer',
-        brand: 'Valentino',
-        category: 'Outerwear',
-        price: '$3,200',
-      },
-      {
-        name: 'White T-Shirt',
-        brand: 'James Perse',
-        category: 'Tops',
-        price: '$95',
-      },
-      {
-        name: 'High-Waist Jeans',
-        brand: 'Levi\'s',
-        category: 'Bottoms',
-        price: '$128',
-      },
-      {
-        name: 'Sneakers',
-        brand: 'Nike',
-        category: 'Shoes',
-        price: '$150',
-      },
-    ],
-    totalCost: '$3,573',
-    tags: ['Street Style', 'Casual', 'Urban', 'Everyday Wear'],
-  },
-]
+// outfits data - now managed through /api/superadmin/outfits
+const OutfitsData: Outfit[] = []
 
 // news data
 const NewsData: News[] = [
