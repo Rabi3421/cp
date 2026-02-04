@@ -1,65 +1,108 @@
-'use client'
-import { useEffect, useState } from 'react'
-import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Outfit } from '@/app/types/outfit'
+import { notFound } from 'next/navigation'
 import { Icon } from '@iconify/react'
 
-const OutfitDetailPage = () => {
-  const params = useParams()
-  const [outfit, setOutfit] = useState<Outfit | null>(null)
-  const [loading, setLoading] = useState(true)
+// Generate metadata for SEO
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
+  try {
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+    const res = await fetch(`${baseUrl}/api/outfits/${id}`, {
+      next: { revalidate: 3600 },
+    })
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const res = await fetch('/api/data')
-        if (!res.ok) throw new Error('Failed to fetch')
-        const data = await res.json()
-        const foundOutfit = data.OutfitsData?.find(
-          (o: Outfit) => o._id === params.id
-        )
-        setOutfit(foundOutfit || null)
-      } catch (error) {
-        console.error('Error fetching outfit:', error)
-      } finally {
-        setLoading(false)
+    if (!res.ok) {
+      return {
+        title: 'Outfit Not Found',
+        description: 'The outfit you are looking for does not exist.',
       }
     }
-    fetchData()
-  }, [params.id])
 
-  if (loading) {
-    return (
-      <main className='pt-32 pb-20'>
-        <div className='container mx-auto max-w-7xl px-4'>
-          <div className='animate-pulse'>
-            <div className='h-96 bg-gray-200 rounded-3xl mb-8'></div>
-            <div className='h-8 bg-gray-200 rounded w-1/2 mb-4'></div>
-            <div className='h-4 bg-gray-200 rounded w-3/4'></div>
-          </div>
-        </div>
-      </main>
-    )
+    const { data: outfit } = await res.json()
+    const celebrityName = typeof outfit.celebrity === 'object' ? outfit.celebrity.name : ''
+
+    return {
+      title: outfit.seo?.metaTitle || `${outfit.title} - ${celebrityName} Outfit Details`,
+      description: outfit.seo?.metaDescription || outfit.description?.replace(/<[^>]*>/g, '').slice(0, 160),
+      keywords: outfit.seo?.metaKeywords || outfit.tags,
+      openGraph: {
+        title: outfit.seo?.ogTitle || outfit.title,
+        description: outfit.seo?.ogDescription || outfit.description?.replace(/<[^>]*>/g, '').slice(0, 160),
+        type: 'article',
+        url: outfit.seo?.ogUrl || `${baseUrl}/outfits/${outfit.slug}`,
+        images: outfit.seo?.ogImages?.length > 0 ? outfit.seo.ogImages : outfit.images,
+        siteName: 'Celebrity Persona',
+      },
+      twitter: {
+        card: 'summary_large_image',
+        title: outfit.seo?.twitterTitle || outfit.title,
+        description: outfit.seo?.twitterDescription || outfit.description?.replace(/<[^>]*>/g, '').slice(0, 160),
+        images: outfit.seo?.twitterImage ? [outfit.seo.twitterImage] : [outfit.images[0]],
+      },
+    }
+  } catch (error) {
+    return {
+      title: 'Outfit Details',
+      description: 'Explore celebrity outfit details and fashion inspiration.',
+    }
   }
+}
+
+async function getOutfit(slug: string) {
+  try {
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+    const res = await fetch(`${baseUrl}/api/outfits/${slug}`, {
+      next: { revalidate: 3600 },
+    })
+
+    if (!res.ok) {
+      return null
+    }
+
+    const { data } = await res.json()
+    return data
+  } catch (error) {
+    console.error('Error fetching outfit:', error)
+    return null
+  }
+}
+
+const OutfitDetailPage = async ({ params }: { params: Promise<{ id: string }> }) => {
+  const { id } = await params
+  const outfit = await getOutfit(id)
 
   if (!outfit) {
-    return (
-      <main className='pt-32 pb-20'>
-        <div className='container mx-auto max-w-7xl px-4 text-center'>
-          <Icon icon='mdi:hanger' width='80' height='80' className='mx-auto text-gray-300 mb-4' />
-          <h1 className='text-3xl font-bold mb-4'>Outfit Not Found</h1>
-          <Link href='/outfits' className='text-primary font-semibold hover:underline'>
-            Back to Outfits
-          </Link>
-        </div>
-      </main>
-    )
+    notFound()
   }
+
+  const celebrityName = typeof outfit.celebrity === 'object' ? outfit.celebrity.name : ''
+  const celebritySlug = typeof outfit.celebrity === 'object' ? outfit.celebrity.slug : ''
 
   return (
     <main>
+      {/* Structured Data for SEO */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'Product',
+            name: outfit.title,
+            description: outfit.description?.replace(/<[^>]*>/g, ''),
+            image: outfit.images,
+            brand: outfit.brand || outfit.designer,
+            offers: outfit.price ? {
+              '@type': 'Offer',
+              price: outfit.price.replace(/[^0-9.]/g, ''),
+              priceCurrency: 'USD',
+              availability: 'https://schema.org/InStock',
+              url: outfit.purchaseLink,
+            } : undefined,
+          }),
+        }}
+      />
+
       {/* Hero Section */}
       <section className='relative overflow-hidden bg-grey pt-32 pb-20'>
         <div className='container mx-auto max-w-7xl px-4'>
@@ -78,32 +121,42 @@ const OutfitDetailPage = () => {
                 alt={outfit.title}
                 fill
                 className='object-cover'
+                priority
               />
+              {outfit.isFeatured && (
+                <div className='absolute top-4 right-4 bg-yellow-500 text-white p-3 rounded-full'>
+                  <Icon icon='mdi:star' width='24' height='24' />
+                </div>
+              )}
             </div>
 
             {/* Right: Info */}
             <div>
-              <div className='bg-primary/15 inline-block px-5 py-2 rounded-full mb-4'>
-                <span className='text-primary font-bold'>{outfit.event}</span>
-              </div>
+              {outfit.event && (
+                <div className='bg-primary/15 inline-block px-5 py-2 rounded-full mb-4'>
+                  <span className='text-primary font-bold'>{outfit.event}</span>
+                </div>
+              )}
 
               <h1 className='text-4xl md:text-5xl font-bold mb-4'>{outfit.title}</h1>
               
-              {typeof outfit.celebrity === 'object' && (
+              {celebrityName && celebritySlug && (
                 <Link 
-                  href={`/celebrities/${outfit.celebrity.slug}`} 
+                  href={`/celebrities/${celebritySlug}`} 
                   className='inline-flex items-center gap-2 text-xl text-gray-600 hover:text-primary transition mb-4'
                 >
                   <Icon icon='mdi:account' width='24' height='24' />
-                  {outfit.celebrity.name}
+                  {celebrityName}
                 </Link>
               )}
 
               <div className='flex items-center gap-6 mb-6'>
-                <div className='flex items-center gap-2 text-gray-600'>
-                  <Icon icon='mdi:calendar' width='20' height='20' />
-                  <span>{outfit.year}</span>
-                </div>
+                {outfit.year && (
+                  <div className='flex items-center gap-2 text-gray-600'>
+                    <Icon icon='mdi:calendar' width='20' height='20' />
+                    <span>{outfit.year}</span>
+                  </div>
+                )}
                 {outfit.price && (
                   <div className='flex items-center gap-2'>
                     <Icon icon='mdi:tag' width='20' height='20' className='text-primary' />
@@ -112,25 +165,33 @@ const OutfitDetailPage = () => {
                 )}
               </div>
 
-              <div 
-                className='prose prose-lg max-w-none mb-8'
-                dangerouslySetInnerHTML={{ __html: outfit.description }}
-              />
+              {outfit.description && (
+                <div 
+                  className='prose prose-lg max-w-none mb-8'
+                  dangerouslySetInnerHTML={{ __html: outfit.description }}
+                />
+              )}
 
               {/* Stats */}
               <div className='flex items-center gap-6 mb-8'>
-                <div className='flex items-center gap-2 text-gray-600'>
-                  <Icon icon='mdi:eye' width='20' height='20' />
-                  <span>{outfit.viewCount}</span>
-                </div>
-                <div className='flex items-center gap-2 text-gray-600'>
-                  <Icon icon='mdi:heart' width='20' height='20' />
-                  <span>{outfit.likesCount}</span>
-                </div>
-                <div className='flex items-center gap-2 text-gray-600'>
-                  <Icon icon='mdi:share' width='20' height='20' />
-                  <span>{outfit.shareCount}</span>
-                </div>
+                {outfit.viewCount > 0 && (
+                  <div className='flex items-center gap-2 text-gray-600'>
+                    <Icon icon='mdi:eye' width='20' height='20' />
+                    <span>{outfit.viewCount}</span>
+                  </div>
+                )}
+                {outfit.likesCount > 0 && (
+                  <div className='flex items-center gap-2 text-gray-600'>
+                    <Icon icon='mdi:heart' width='20' height='20' />
+                    <span>{outfit.likesCount}</span>
+                  </div>
+                )}
+                {outfit.shareCount > 0 && (
+                  <div className='flex items-center gap-2 text-gray-600'>
+                    <Icon icon='mdi:share' width='20' height='20' />
+                    <span>{outfit.shareCount}</span>
+                  </div>
+                )}
               </div>
 
               {/* Details */}
@@ -166,15 +227,17 @@ const OutfitDetailPage = () => {
               </div>
 
               {/* Tags */}
-              <div className='flex flex-wrap gap-2 mb-8'>
-                {outfit.tags.map((tag, index) => (
-                  <span
-                    key={index}
-                    className='bg-grey px-4 py-2 rounded-full text-sm font-semibold'>
-                    #{tag}
-                  </span>
-                ))}
-              </div>
+              {outfit.tags && outfit.tags.length > 0 && (
+                <div className='flex flex-wrap gap-2 mb-8'>
+                  {outfit.tags.map((tag: string, index: number) => (
+                    <span
+                      key={index}
+                      className='bg-grey px-4 py-2 rounded-full text-sm font-semibold'>
+                      #{tag}
+                    </span>
+                  ))}
+                </div>
+              )}
 
               {/* Purchase Link */}
               {outfit.purchaseLink && (
@@ -193,12 +256,12 @@ const OutfitDetailPage = () => {
       </section>
 
       {/* Image Gallery */}
-      {outfit.images.length > 1 && (
+      {outfit.images && outfit.images.length > 1 && (
         <section className='py-20'>
           <div className='container mx-auto max-w-7xl px-4'>
             <h2 className='text-3xl font-bold mb-12 text-center'>More Photos</h2>
             <div className='grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6'>
-              {outfit.images.slice(1).map((image, index) => (
+              {outfit.images.slice(1).map((image: string, index: number) => (
                 <div
                   key={index}
                   className='relative h-64 rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow'>
@@ -235,3 +298,4 @@ const OutfitDetailPage = () => {
 }
 
 export default OutfitDetailPage
+

@@ -277,7 +277,7 @@ const CelebritiesPage = () => {
                             <span className='line-clamp-1'>{celebrity.birthPlace}</span>
                           </div>
                         )}
-                        {celebrity.viewCount > 0 && (
+                        {celebrity.viewCount && celebrity.viewCount > 0 && (
                           <div className='flex items-center gap-1 text-sm text-gray-500'>
                             <Icon icon='mdi:eye' width='16' height='16' />
                             <span>{celebrity.viewCount}</span>
