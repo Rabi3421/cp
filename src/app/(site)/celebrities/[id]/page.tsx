@@ -92,6 +92,15 @@ const CelebrityDetailPage = async ({ params }: { params: Promise<{ id: string }>
     ? celebrity.profession.join(', ') 
     : celebrity.profession || celebrity.occupation
 
+  // Prepare a list for rendering badges under the name
+  const professionList = Array.isArray(celebrity.profession)
+    ? celebrity.profession
+    : celebrity.profession
+      ? celebrity.profession.split(',').map((s: string) => s.trim())
+      : celebrity.occupation
+        ? celebrity.occupation.split(',').map((s: string) => s.trim())
+        : []
+
   const educationList = Array.isArray(celebrity.education) 
     ? celebrity.education 
     : celebrity.education ? [celebrity.education] : []
@@ -124,105 +133,106 @@ const CelebrityDetailPage = async ({ params }: { params: Promise<{ id: string }>
       />
 
       {/* Hero Section with Image */}
-      <section className='relative overflow-hidden bg-grey pt-32 pb-20'>
+      <section className='relative overflow-hidden bg-grey pt-32 pb-16'>
         <div className='container mx-auto max-w-7xl px-4'>
           <Link
             href='/celebrities'
-            className='inline-flex items-center gap-2 text-primary font-semibold mb-8 hover:underline'>
-            <Icon icon='tabler:chevron-left' width='20' height='20' />
+            className='inline-flex items-center gap-2 text-primary font-semibold mb-2 mt-1 bg-white border border-gray-200 px-2 py-1 rounded-md hover:bg-primary/5 transition relative z-10'>
+            <Icon icon='tabler:chevron-left' width='16' height='16' />
             Back to Celebrities
           </Link>
 
+          {/* Mobile: show name + badges first, desktop will show name inside left column */}
+          <div className='block lg:hidden mb-4'>
+            <h1 className='text-3xl font-bold mb-3'>{celebrity.name}</h1>
+            {professionList && professionList.length > 0 && (
+              <div className='flex flex-wrap items-center gap-2'>
+                {professionList.map((p: string, i: number) => (
+                  <span key={i} className='inline-flex items-center text-sm font-medium bg-primary/10 text-primary px-3 py-1 rounded-full'>
+                    {p}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+
           <div className='grid grid-cols-1 lg:grid-cols-3 gap-12'>
             {/* Left: Info (primary content) */}
-            <div className='lg:col-span-2'>
-              {celebrity.categories && celebrity.categories.length > 0 && (
-                <div className='bg-primary/15 inline-block px-5 py-2 rounded-full mb-4'>
-                  <span className='text-primary font-bold'>{celebrity.categories[0]}</span>
-                </div>
-              )}
+            <div className='lg:col-span-2 order-2 lg:order-1'>
+              <div className='hidden lg:block'>
+                <h1 className='text-4xl md:text-5xl font-bold mb-4'>{celebrity.name}</h1>
 
-              <h1 className='text-4xl md:text-5xl font-bold mb-4'>{celebrity.name}</h1>
-              <p className='text-xl text-gray-600 mb-8'>{professions}</p>
-
-              {/* Quick Info Grid */}
-              <div className='grid grid-cols-2 md:grid-cols-3 gap-6 mb-8'>
-                {celebrity.born && (
-                  <div className='bg-white rounded-2xl p-6 shadow-xl'>
-                    <div className='flex items-center gap-3 mb-2'>
-                      <Icon icon='mdi:cake-variant' width='24' height='24' className='text-primary' />
-                      <span className='text-sm text-gray-500'>Born</span>
-                    </div>
-                    <p className='font-semibold'>{celebrity.born}</p>
-                    {celebrity.age && <p className='text-sm text-gray-500'>Age: {celebrity.age}</p>}
-                  </div>
-                )}
-
-                {celebrity.birthPlace && (
-                  <div className='bg-white rounded-2xl p-6 shadow-xl'>
-                    <div className='flex items-center gap-3 mb-2'>
-                      <Icon icon='mdi:map-marker' width='24' height='24' className='text-primary' />
-                      <span className='text-sm text-gray-500'>Birthplace</span>
-                    </div>
-                    <p className='font-semibold'>{celebrity.birthPlace}</p>
-                  </div>
-                )}
-
-                {celebrity.nationality && (
-                  <div className='bg-white rounded-2xl p-6 shadow-xl'>
-                    <div className='flex items-center gap-3 mb-2'>
-                      <Icon icon='mdi:flag' width='24' height='24' className='text-primary' />
-                      <span className='text-sm text-gray-500'>Nationality</span>
-                    </div>
-                    <p className='font-semibold'>{celebrity.nationality}</p>
-                  </div>
-                )}
-
-                {celebrity.height && (
-                  <div className='bg-white rounded-2xl p-6 shadow-xl'>
-                    <div className='flex items-center gap-3 mb-2'>
-                      <Icon icon='mdi:human-male-height' width='24' height='24' className='text-primary' />
-                      <span className='text-sm text-gray-500'>Height</span>
-                    </div>
-                    <p className='font-semibold'>{celebrity.height}</p>
-                  </div>
-                )}
-
-                {celebrity.yearsActive && (
-                  <div className='bg-white rounded-2xl p-6 shadow-xl'>
-                    <div className='flex items-center gap-3 mb-2'>
-                      <Icon icon='mdi:calendar-clock' width='24' height='24' className='text-primary' />
-                      <span className='text-sm text-gray-500'>Years Active</span>
-                    </div>
-                    <p className='font-semibold'>{celebrity.yearsActive}</p>
-                  </div>
-                )}
-
-                {celebrity.netWorth && (
-                  <div className='bg-white rounded-2xl p-6 shadow-xl'>
-                    <div className='flex items-center gap-3 mb-2'>
-                      <Icon icon='mdi:cash' width='24' height='24' className='text-primary' />
-                      <span className='text-sm text-gray-500'>Net Worth</span>
-                    </div>
-                    <p className='font-semibold'>{celebrity.netWorth}</p>
+                {/* Render professions/categories as small badges */}
+                {professionList && professionList.length > 0 && (
+                  <div className='flex flex-wrap items-center gap-2 mb-8'>
+                    {professionList.map((p: string, i: number) => (
+                      <span key={i} className='inline-flex items-center text-sm font-medium bg-primary/10 text-primary px-3 py-1 rounded-full'>
+                        {p}
+                      </span>
+                    ))}
                   </div>
                 )}
               </div>
 
-              {/* Introduction */}
+              {/* Introduction (no heading) */}
               {celebrity.introduction && (
                 <div className='bg-white rounded-2xl p-8 shadow-xl'>
-                  <h3 className='text-2xl font-bold mb-4'>Introduction</h3>
                   <div 
                     className='text-lg text-gray-700 leading-relaxed prose prose-lg max-w-none'
                     dangerouslySetInnerHTML={{ __html: celebrity.introduction }}
                   />
                 </div>
               )}
+
+              {/* Quick Links (blue) + Contents box - moved below introduction */}
+              <div className='mt-8 mb-8'>
+                <div className='bg-primary/10 rounded-2xl p-6 flex items-center gap-4 mb-6'>
+                  <div className='bg-primary/20 p-3 rounded-md'>
+                    <Icon icon='mdi:book-open-page-variant' width='20' height='20' className='text-primary' />
+                  </div>
+                  <div>
+                    <h4 className='font-semibold'>Quick Links</h4>
+                    <p className='text-sm text-gray-600'>Jump to important sections of the article</p>
+                  </div>
+                </div>
+
+                <div>
+                  <div className='bg-white rounded-2xl p-6 shadow-lg'>
+                    <h4 className='font-semibold mb-4'>Contents</h4>
+                    <div className='grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-700'>
+                      <div className='space-y-2'>
+                        <a href='#early-life' className='block hover:text-primary'>1 Early life</a>
+                        <a href='#career' className='block hover:text-primary'>2 Career</a>
+                        <a href='#achievements' className='block hover:text-primary'>3 Achievements</a>
+                        <a href='#awards' className='block hover:text-primary'>4 Awards</a>
+                        <a href='#works' className='block hover:text-primary'>5 Notable works</a>
+                      </div>
+                      <div className='space-y-2'>
+                        <a href='#filmography' className='block hover:text-primary'>6 Filmography</a>
+                        <a href='#personal-life' className='block hover:text-primary'>7 Personal life</a>
+                        <a href='#education' className='block hover:text-primary'>8 Education</a>
+                        <a href='#physical-attributes' className='block hover:text-primary'>9 Physical attributes</a>
+                        <a href='#extras' className='block hover:text-primary'>10 More</a>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                {/* Featured image (moved below Contents) */}
+                <div className='mt-6'>
+                  <div className='relative w-full h-44 md:h-56 lg:h-64 rounded-2xl overflow-hidden shadow-lg'>
+                    <Image
+                      src={celebrity.coverImage || celebrity.featuredImage || celebrity.profileImage || '/images/placeholder.jpg'}
+                      alt={`${celebrity.name} - featured`}
+                      fill
+                      className='object-cover'
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* Right: Image + Quick facts (sticky card) */}
-            <div className='lg:col-span-1'>
+            <div className='lg:col-span-1 order-1 lg:order-2'>
               <div className='sticky top-24 space-y-6'>
                 <div className='relative w-full h-96 lg:h-auto lg:aspect-[3/4] rounded-3xl overflow-hidden shadow-xl'>
                   <Image
@@ -242,6 +252,136 @@ const CelebrityDetailPage = async ({ params }: { params: Promise<{ id: string }>
                       <Icon icon='mdi:check-decagram' width='24' height='24' />
                     </div>
                   )}
+                </div>
+
+                {/* Sidebar: Quick Facts card (image above, facts below) */}
+                <div className='bg-white rounded-2xl p-6 shadow-xl'>
+                  <h3 className='text-xl font-bold mb-4'>{celebrity.name}</h3>
+                  <div className='text-sm text-gray-700 space-y-3'>
+                    {celebrity.born && (
+                      <div className='flex items-start justify-between'>
+                        <span className='text-gray-500'>Born:</span>
+                        <span className='font-semibold text-right'>{celebrity.born}</span>
+                      </div>
+                    )}
+
+                    {celebrity.birthPlace && (
+                      <div className='flex items-start justify-between'>
+                        <span className='text-gray-500'>Birth Place:</span>
+                        <span className='font-semibold text-right'>{celebrity.birthPlace}</span>
+                      </div>
+                    )}
+
+                    {celebrity.age && (
+                      <div className='flex items-start justify-between'>
+                        <span className='text-gray-500'>Age:</span>
+                        <span className='font-semibold text-right'>{celebrity.age}</span>
+                      </div>
+                    )}
+
+                    {celebrity.nationality && (
+                      <div className='flex items-start justify-between'>
+                        <span className='text-gray-500'>Nationality:</span>
+                        <span className='font-semibold text-right'>{celebrity.nationality}</span>
+                      </div>
+                    )}
+
+                    {(celebrity.occupation || celebrity.profession) && (
+                      <div className='flex items-start justify-between'>
+                        <span className='text-gray-500'>Occupation:</span>
+                        <span className='font-semibold text-right'>{professions}</span>
+                      </div>
+                    )}
+
+                    {celebrity.yearsActive && (
+                      <div className='flex items-start justify-between'>
+                        <span className='text-gray-500'>Years active:</span>
+                        <span className='font-semibold text-right'>{celebrity.yearsActive}</span>
+                      </div>
+                    )}
+
+                    {celebrity.height && (
+                      <div className='flex items-start justify-between'>
+                        <span className='text-gray-500'>Height:</span>
+                        <span className='font-semibold text-right'>{celebrity.height}</span>
+                      </div>
+                    )}
+
+                    {celebrity.netWorth && (
+                      <div className='flex items-start justify-between'>
+                        <span className='text-gray-500'>Net Worth:</span>
+                        <span className='font-semibold text-right'>{celebrity.netWorth}</span>
+                      </div>
+                    )}
+                    {/* Family details moved here */}
+                    {celebrity.spouse && (
+                      <div className='flex items-start justify-between'>
+                        <span className='text-gray-500'>Spouse:</span>
+                        <span className='font-semibold text-right'>{celebrity.spouse}</span>
+                      </div>
+                    )}
+
+                    {celebrity.children && celebrity.children.length > 0 && (
+                      <div className='flex items-start justify-between'>
+                        <span className='text-gray-500'>Children:</span>
+                        <span className='font-semibold text-right'>{celebrity.children.join(', ')}</span>
+                      </div>
+                    )}
+
+                    {celebrity.parents && celebrity.parents.length > 0 && (
+                      <div className='flex items-start justify-between'>
+                        <span className='text-gray-500'>Parents:</span>
+                        <span className='font-semibold text-right'>{celebrity.parents.join(', ')}</span>
+                      </div>
+                    )}
+
+                    {celebrity.siblings && celebrity.siblings.length > 0 && (
+                      <div className='flex items-start justify-between'>
+                        <span className='text-gray-500'>Siblings:</span>
+                        <span className='font-semibold text-right'>{celebrity.siblings.join(', ')}</span>
+                      </div>
+                    )}
+
+                    {/* Education (moved to sidebar) */}
+                    {educationList && educationList.length > 0 && (
+                      <div className='flex items-start justify-between'>
+                        <span className='text-gray-500'>Education:</span>
+                        <span className='font-semibold text-right'>{educationList.join(', ')}</span>
+                      </div>
+                    )}
+
+                    {/* Physical attributes (moved to sidebar) */}
+                    {celebrity.height && (
+                      <div className='flex items-start justify-between'>
+                        <span className='text-gray-500'>Height:</span>
+                        <span className='font-semibold text-right'>{celebrity.height}</span>
+                      </div>
+                    )}
+                    {celebrity.weight && (
+                      <div className='flex items-start justify-between'>
+                        <span className='text-gray-500'>Weight:</span>
+                        <span className='font-semibold text-right'>{celebrity.weight}</span>
+                      </div>
+                    )}
+                    {celebrity.eyeColor && (
+                      <div className='flex items-start justify-between'>
+                        <span className='text-gray-500'>Eye Color:</span>
+                        <span className='font-semibold text-right'>{celebrity.eyeColor}</span>
+                      </div>
+                    )}
+                    {celebrity.hairColor && (
+                      <div className='flex items-start justify-between'>
+                        <span className='text-gray-500'>Hair Color:</span>
+                        <span className='font-semibold text-right'>{celebrity.hairColor}</span>
+                      </div>
+                    )}
+                    {celebrity.bodyMeasurements && (
+                      <div className='flex items-start justify-between'>
+                        <span className='text-gray-500'>Body Measurements:</span>
+                        <span className='font-semibold text-right'>{celebrity.bodyMeasurements}</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 {/* Follow / Stats card */}
@@ -283,48 +423,7 @@ const CelebrityDetailPage = async ({ params }: { params: Promise<{ id: string }>
         </div>
       </section>
 
-      {/* Quick Links (blue) + Contents box */}
-      <div className='container mx-auto max-w-7xl px-4 mb-8'>
-        <div className='grid grid-cols-1 lg:grid-cols-3 gap-8'>
-          <div className='lg:col-span-2'>
-            <div className='mb-6'>
-              <div className='bg-primary/10 rounded-2xl p-6 flex items-center gap-4'>
-                <div className='bg-primary/20 p-3 rounded-md'>
-                  <Icon icon='mdi:book-open-page-variant' width='20' height='20' className='text-primary' />
-                </div>
-                <div>
-                  <h4 className='font-semibold'>Quick Links</h4>
-                  <p className='text-sm text-gray-600'>Jump to important sections of the article</p>
-                </div>
-              </div>
-            </div>
-
-            <div className='mb-8'>
-              <div className='bg-white rounded-2xl p-6 shadow-lg'>
-                <h4 className='font-semibold mb-4'>Contents</h4>
-                <div className='grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-700'>
-                  <div className='space-y-2'>
-                    <a href='#early-life' className='block hover:text-primary'>1 Early life</a>
-                    <a href='#career' className='block hover:text-primary'>2 Career</a>
-                    <a href='#achievements' className='block hover:text-primary'>3 Achievements</a>
-                    <a href='#awards' className='block hover:text-primary'>4 Awards</a>
-                    <a href='#works' className='block hover:text-primary'>5 Notable works</a>
-                  </div>
-                  <div className='space-y-2'>
-                    <a href='#filmography' className='block hover:text-primary'>6 Filmography</a>
-                    <a href='#personal-life' className='block hover:text-primary'>7 Personal life</a>
-                    <a href='#education' className='block hover:text-primary'>8 Education</a>
-                    <a href='#physical-attributes' className='block hover:text-primary'>9 Physical attributes</a>
-                    <a href='#extras' className='block hover:text-primary'>10 More</a>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className='lg:col-span-1' />
-        </div>
-      </div>
+      
 
       {/* Pass celebrity data to client component for interactive tabs */}
       <CelebrityDetailClient celebrity={celebrity} educationList={educationList} />

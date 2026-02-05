@@ -72,8 +72,8 @@ const Header: React.FC = () => {
         <div className='container mx-auto max-w-7xl flex items-center justify-between px-4'>
           {/* Logo */}
           <div
-            className={`pr-16 lg:border-r border-black/10 duration-300 ${
-              sticky ? 'py-3' : 'py-7'
+            className={`pr-8 lg:border-r border-black/10 duration-300 ${
+              sticky ? 'py-2 lg:py-3' : 'py-2 lg:py-6'
             }`}
           >
             <Logo />
@@ -88,8 +88,8 @@ const Header: React.FC = () => {
 
           {/* Desktop Actions */}
           <div
-            className={`flex items-center gap-4 pl-16 lg:border-l border-black/10 duration-300 ${
-              sticky ? 'py-3' : 'py-7'
+            className={`flex items-center gap-4 pl-8 lg:border-l border-black/10 duration-300 ${
+              sticky ? 'py-2 lg:py-3' : 'py-2 lg:py-6'
             }`}
           >
             <div className='flex items-center gap-3'>
@@ -105,6 +105,7 @@ const Header: React.FC = () => {
                   alt='Instagram'
                   width={28}
                   height={28}
+                  className='w-10 h-10 lg:w-7 lg:h-7'
                 />
               </a>
 
@@ -120,6 +121,7 @@ const Header: React.FC = () => {
                   alt='Facebook'
                   width={28}
                   height={28}
+                  className='w-10 h-10 lg:w-7 lg:h-7'
                 />
               </a>
             </div>
@@ -184,12 +186,12 @@ const Header: React.FC = () => {
             {/* Mobile Toggle */}
             <button
               onClick={() => setNavbarOpen(!navbarOpen)}
-              className='block lg:hidden p-2 rounded-lg'
+              className='block lg:hidden p-3 rounded-md focus:outline-none'
               aria-label='Toggle mobile menu'
             >
-              <span className='block w-6 h-0.5 bg-darkmode'></span>
-              <span className='block w-6 h-0.5 bg-darkmode mt-1.5'></span>
-              <span className='block w-6 h-0.5 bg-darkmode mt-1.5'></span>
+              <span className='block w-7 h-0.5 bg-darkmode rounded'></span>
+              <span className='block w-7 h-0.5 bg-darkmode mt-1.5 rounded'></span>
+              <span className='block w-7 h-0.5 bg-darkmode mt-1.5 rounded'></span>
             </button>
           </div>
         </div>
@@ -236,6 +238,7 @@ const Header: React.FC = () => {
                   alt='Instagram'
                   width={28}
                   height={28}
+                  className='w-9 h-9 lg:w-7 lg:h-7'
                 />
               </a>
 
@@ -252,6 +255,7 @@ const Header: React.FC = () => {
                   alt='Facebook'
                   width={28}
                   height={28}
+                  className='w-9 h-9 lg:w-7 lg:h-7'
                 />
               </a>
             </div>
