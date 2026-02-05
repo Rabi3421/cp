@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import Image from 'next/image'
+import ImageGalleryClient from './ImageGalleryClient'
 import { notFound } from 'next/navigation'
 import { Icon } from '@iconify/react'
 
@@ -78,6 +79,36 @@ const OutfitDetailPage = async ({ params }: { params: Promise<{ id: string }> })
 
   const celebrityName = typeof outfit.celebrity === 'object' ? outfit.celebrity.name : ''
   const celebritySlug = typeof outfit.celebrity === 'object' ? outfit.celebrity.slug : ''
+  const celebrityId = typeof outfit.celebrity === 'object' ? outfit.celebrity._id : outfit.celebrity
+
+  // Fetch related outfits (by celebrity) and related celebrities for 'people also search for'
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+  let otherOutfits: any[] = []
+  let relatedCelebritiesList: any[] = []
+
+  try {
+    if (celebrityId) {
+      const ro = await fetch(`${baseUrl}/api/outfits?celebrity=${celebrityId}&limit=8`, { next: { revalidate: 3600 } })
+      if (ro.ok) {
+        const roJson = await ro.json()
+        otherOutfits = (roJson.data || []).filter((o: any) => String(o._id) !== String(outfit._id)).slice(0, 6)
+      }
+    }
+  } catch (err) {
+    console.error('Error fetching other outfits:', err)
+  }
+
+  try {
+    if (celebritySlug) {
+      const rc = await fetch(`${baseUrl}/api/celebrities/related?slug=${encodeURIComponent(celebritySlug)}&limit=6`, { next: { revalidate: 3600 } })
+      if (rc.ok) {
+        const rcJson = await rc.json()
+        relatedCelebritiesList = rcJson.data || []
+      }
+    }
+  } catch (err) {
+    console.error('Error fetching related celebrities:', err)
+  }
 
   return (
     <main>
@@ -114,15 +145,11 @@ const OutfitDetailPage = async ({ params }: { params: Promise<{ id: string }> })
           </Link>
 
           <div className='grid grid-cols-1 lg:grid-cols-2 gap-12'>
-            {/* Left: Image */}
-            <div className='relative h-[600px] rounded-3xl overflow-hidden shadow-xl'>
-              <Image
-                src={outfit.images[0] || '/images/placeholder.jpg'}
-                alt={outfit.title}
-                fill
-                className='object-cover'
-                priority
-              />
+            {/* Left: Image Gallery */}
+            <div className='relative'>
+              {/* Client-side gallery with thumbnails */}
+              {/* @ts-expect-error Async server -> client props */}
+              <ImageGalleryClient images={outfit.images} featured={outfit.isFeatured} />
               {outfit.isFeatured && (
                 <div className='absolute top-4 right-4 bg-yellow-500 text-white p-3 rounded-full'>
                   <Icon icon='mdi:star' width='24' height='24' />
@@ -255,28 +282,75 @@ const OutfitDetailPage = async ({ params }: { params: Promise<{ id: string }> })
         </div>
       </section>
 
-      {/* Image Gallery */}
-      {outfit.images && outfit.images.length > 1 && (
-        <section className='py-20'>
-          <div className='container mx-auto max-w-7xl px-4'>
-            <h2 className='text-3xl font-bold mb-12 text-center'>More Photos</h2>
-            <div className='grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6'>
-              {outfit.images.slice(1).map((image: string, index: number) => (
-                <div
-                  key={index}
-                  className='relative h-64 rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow'>
-                  <Image
-                    src={image}
-                    alt={`${outfit.title} - Image ${index + 2}`}
-                    fill
-                    className='object-cover'
-                  />
-                </div>
+      {/* Other Outfits (related) */}
+      <section className='py-20 bg-white'>
+        <div className='container mx-auto max-w-7xl px-4'>
+          <h2 className='text-3xl font-bold text-center mb-6'>Other Outfits</h2>
+          {otherOutfits.length > 0 ? (
+            <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6'>
+              {otherOutfits.map((o: any) => (
+                <Link key={o._id} href={`/outfits/${o.slug}`} className='group'>
+                  <div className='bg-white rounded-3xl p-4 shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-1'>
+                    <div className='relative w-full aspect-[3/4] mb-4 overflow-hidden rounded-2xl'>
+                      <Image src={o.images?.[0] || '/images/placeholder.jpg'} alt={o.title} fill className='object-cover' />
+                    </div>
+                    <h3 className='text-lg font-bold mb-1 line-clamp-2'>{o.title}</h3>
+                    <p className='text-sm text-gray-500 mb-3'>{o.event} • {o.designer}</p>
+                    <div className='flex items-center justify-between'>
+                      <span className='text-primary font-semibold'>View Details</span>
+                      <span className='text-sm text-gray-400'>{o.year || ''}</span>
+                    </div>
+                  </div>
+                </Link>
               ))}
             </div>
-          </div>
-        </section>
-      )}
+          ) : (
+            <div className='text-center'>
+              <p className='text-gray-600 mb-6'>No related outfits found.</p>
+              <Link href='/outfits' className='inline-block bg-primary text-white px-6 py-3 rounded-full font-semibold hover:bg-darkmode transition'>
+                Browse Outfits
+              </Link>
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* People Also Search For - Related Celebrities */}
+      <section className='py-16 bg-grey'>
+        <div className='container mx-auto max-w-7xl px-4'>
+          <h2 className='text-3xl font-bold text-center mb-8'>People also search for</h2>
+          {relatedCelebritiesList.length > 0 ? (
+            <div className='grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6'>
+              {relatedCelebritiesList.map((c: any) => (
+                <Link key={c._id} href={`/celebrities/${c.slug}`} className='group'>
+                  <div className='bg-white rounded-3xl p-4 shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-2'>
+                    <div className='relative w-full aspect-[3/4] mb-4 overflow-hidden rounded-2xl'>
+                      <Image
+                        src={c.profileImage || '/images/placeholder.jpg'}
+                        alt={c.name}
+                        fill
+                        className='object-cover group-hover:scale-105 transition-transform duration-300'
+                      />
+                    </div>
+                    <h3 className='text-sm font-semibold mb-1 line-clamp-2'>{c.name}</h3>
+                    {c.occupation && (
+                      <p className='text-xs text-gray-500 mb-2 line-clamp-1'>
+                        {Array.isArray(c.occupation) ? c.occupation.join(', ') : c.occupation}
+                      </p>
+                    )}
+                    <div className='flex items-center justify-between pt-2 border-t border-gray-100'>
+                      <span className='text-primary text-xs font-semibold'>View Profile</span>
+                      <span className='text-xs text-gray-400'>{/* optional meta */}</span>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <p className='text-center text-gray-600'>No similar celebrities found.</p>
+          )}
+        </div>
+      </section>
 
       {/* Related Section */}
       <section className='py-20 bg-grey'>
