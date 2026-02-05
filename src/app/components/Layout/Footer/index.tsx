@@ -25,14 +25,19 @@ const footer = () => {
   }, [])
 
   return (
-    <div className='bg-black' id='first-section'>
-      <div className='container mx-auto max-w-2xl pt-48 pb-16 px-4 sm:px-6 lg:max-w-7xl lg:px-8'>
-        <div className='grid grid-cols-1 gap-y-10 gap-x-16 sm:grid-cols-2 lg:grid-cols-12 xl:gap-x-8'>
+    <div className='bg-gray-50' id='first-section'>
+      <div className='container mx-auto max-w-2xl pt-16 pb-16 px-4 sm:px-6 lg:max-w-7xl lg:px-8'>
+        <div className='grid grid-cols-1 gap-y-8 gap-x-8 sm:grid-cols-2 lg:grid-cols-12 xl:gap-x-8'>
           {/* COLUMN-1 */}
           <div className='col-span-4'>
-            <h4 className='text-white text-3xl leading-9 mb-4 lg:mb-20'>
-              Desgy Solutions
-            </h4>
+            <div className='mb-3'>
+              <Image src='/images/logo/logo.png' alt='CelebrityPersona' width={180} height={36} />
+            </div>
+            <p className='text-gray-600 text-sm max-w-md mb-4'>
+              Discover celebrity looks, outfit breakdowns, and style inspiration from
+              film, TV and social media. Browse curated outfits, read biographies,
+              and get outfit-decode tips to recreate the looks you love.
+            </p>
             <div className='flex items-center gap-4'>
               <div className='footer-icons'>
                 <Link href='https://facebook.com'>
@@ -67,52 +72,96 @@ const footer = () => {
             </div>
           </div>
           {/* CLOUMN-2/3 */}
-          {footerlinks.map((item, i) => (
-            <div key={i} className='group relative col-span-2'>
-              <p className='text-white text-xl font-extrabold mb-9'>
-                {item.section}
-              </p>
-              <ul>
-                {item.links.map((item, i) => (
-                  <li key={i} className='mb-5'>
-                    <Link
-                      href={`${item.href}`}
-                      className='text-white text-lg font-normal mb-6 space-links hover:text-white/60 hover:underline'>
-                      {item.label}
-                    </Link>
+          {footerlinks.length > 0 ? (
+            footerlinks.map((item, i) => (
+              <div key={i} className='group relative col-span-2'>
+                <p className='text-gray-900 text-sm font-bold mb-4'>{item.section}</p>
+                <ul>
+                  {item.links.map((item, i) => (
+                    <li key={i} className='mb-3'>
+                      <Link
+                        href={`${item.href}`}
+                        className='text-gray-600 text-sm font-normal hover:text-gray-900 transition-colors'>
+                        {item.label}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))
+          ) : (
+            <>
+              <div className='group relative col-span-2'>
+                <p className='text-gray-900 text-sm font-bold mb-4'>Menu</p>
+                <ul>
+                  <li className='mb-3'>
+                    <Link href='/celebrities' className='text-gray-600 text-sm hover:text-gray-900'>Celebrities</Link>
                   </li>
-                ))}
-              </ul>
-            </div>
-          ))}
+                  <li className='mb-3'>
+                    <Link href='/outfits' className='text-gray-600 text-sm hover:text-gray-900'>Outfits</Link>
+                  </li>
+                  <li className='mb-3'>
+                    <Link href='/news' className='text-gray-600 text-sm hover:text-gray-900'>News</Link>
+                  </li>
+                  <li className='mb-3'>
+                    <Link href='/blogs' className='text-gray-600 text-sm hover:text-gray-900'>Blogs</Link>
+                  </li>
+                </ul>
+              </div>
+              <div className='group relative col-span-2'>
+                <p className='text-gray-900 text-sm font-bold mb-4'>Categories</p>
+                <ul>
+                  <li className='mb-3'>
+                    <Link href='/category/design' className='text-gray-600 text-sm hover:text-gray-900'>Design</Link>
+                  </li>
+                  <li className='mb-3'>
+                    <Link href='/category/mockup' className='text-gray-600 text-sm hover:text-gray-900'>Mockup</Link>
+                  </li>
+                  <li className='mb-3'>
+                    <Link href='/category/view-all' className='text-gray-600 text-sm hover:text-gray-900'>View all</Link>
+                  </li>
+                </ul>
+              </div>
+              <div className='group relative col-span-2'>
+                <p className='text-gray-900 text-sm font-bold mb-4'>Support</p>
+                <ul>
+                  <li className='mb-3'>
+                    <Link href='/about' className='text-gray-600 text-sm hover:text-gray-900'>About us</Link>
+                  </li>
+                  <li className='mb-3'>
+                    <Link href='/faq' className='text-gray-600 text-sm hover:text-gray-900'>FAQ</Link>
+                  </li>
+                  <li className='mb-3'>
+                    <Link href='/contact' className='text-gray-600 text-sm hover:text-gray-900'>Contact</Link>
+                  </li>
+                </ul>
+              </div>
+            </>
+          )}
         </div>
       </div>
       {/* All Rights Reserved */}
       <div className='mx-auto max-w-2xl lg:max-w-7xl'>
-        <div className='pt-5 pb-5 px-4 sm:px-6 lg:px-4 border-t border-white/30'>
-          <div className='mt-4 grid grid-cols-1 gap-y-10 gap-x-16 sm:grid-cols-2 xl:gap-x-8'>
+        <div className='pt-6 pb-6 px-4 sm:px-6 lg:px-4 border-t border-gray-200'>
+            <div className='mt-4 grid grid-cols-1 gap-y-4 gap-x-8 sm:grid-cols-2 xl:gap-x-8'>
             <div>
-              <p className='text-center md:text-start text-white text-lg'>
-                @2025 - All Rights Reserved by{' '}
+              <p className='text-center md:text-start text-gray-600 text-sm'>
+                ©{new Date().getFullYear()} - All Rights Reserved by{' '}
                 <Link
-                  href='https://getnextjstemplates.com/'
+                  href='https://celebritypersona.example/'
                   target='_blank'
-                  className='hover:text-white/60 hover:underline'>
-                  {' '}
-                  GetNextJsTemplates.com
+                  className='text-primary hover:underline'>
+                  CelebrityPersona
                 </Link>
               </p>
             </div>
-            <div className='flex justify-center md:justify-end'>
-              <Link href='/'>
-                <p className='text-base text-white pr-6 hover:text-white/60 hover:underline'>
-                  Privacy policy
-                </p>
+            <div className='flex justify-center md:justify-end items-center gap-6'>
+              <Link href='/' className='text-sm text-gray-600 hover:text-gray-900'>
+                Privacy policy
               </Link>
-              <Link href='/'>
-                <p className='text-base text-white pl-6 border-solid border-l border-footer hover:text-white/60 hover:underline'>
-                  Terms & conditions
-                </p>
+              <span className='h-4 w-px bg-gray-200' />
+              <Link href='/' className='text-sm text-gray-600 hover:text-gray-900'>
+                Terms & conditions
               </Link>
             </div>
           </div>

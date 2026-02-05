@@ -105,6 +105,34 @@ const CelebrityDetailPage = async ({ params }: { params: Promise<{ id: string }>
     ? celebrity.education 
     : celebrity.education ? [celebrity.education] : []
 
+  // Fetch related outfits for this celebrity (server-side)
+  let relatedOutfits: any[] = []
+  try {
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+    const q = new URLSearchParams({ celebrity: celebrity._id, limit: '6' })
+    const res = await fetch(`${baseUrl}/api/outfits?${q.toString()}`, { next: { revalidate: 3600 } })
+    if (res.ok) {
+      const data = await res.json()
+      if (data.success && Array.isArray(data.data)) relatedOutfits = data.data
+    }
+  } catch (err) {
+    console.error('Error fetching related outfits:', err)
+  }
+
+  // Fetch related celebrities (people also search for)
+  let relatedCelebritiesList: any[] = []
+  try {
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+    const q2 = new URLSearchParams({ slug: celebrity.slug, limit: '6' })
+    const res2 = await fetch(`${baseUrl}/api/celebrities/related?${q2.toString()}`, { next: { revalidate: 3600 } })
+    if (res2.ok) {
+      const d2 = await res2.json()
+      if (d2.success && Array.isArray(d2.data)) relatedCelebritiesList = d2.data
+    }
+  } catch (err) {
+    console.error('Error fetching related celebrities:', err)
+  }
+
   return (
     <main>
       {/* Structured Data for SEO */}
@@ -452,19 +480,75 @@ const CelebrityDetailPage = async ({ params }: { params: Promise<{ id: string }>
         </section>
       )}
 
-      {/* Related Section */}
+      {/* Related Outfits Section (for this celebrity) */}
       <section className='py-20 bg-white'>
         <div className='container mx-auto max-w-7xl px-4'>
-          <h2 className='text-3xl font-bold text-center mb-12'>
-            Explore More Celebrities
+          <h2 className='text-3xl font-bold text-center mb-6'>
+            Outfits featuring {celebrity.name}
           </h2>
-          <div className='text-center'>
-            <Link
-              href='/celebrities'
-              className='inline-block bg-primary text-white px-8 py-4 rounded-full font-semibold hover:bg-darkmode transition'>
-              View All Celebrities
-            </Link>
-          </div>
+          {relatedOutfits.length > 0 ? (
+            <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6'>
+              {relatedOutfits.map((outfit: any) => (
+                <Link key={outfit._id} href={`/outfits/${outfit.slug}`} className='group'>
+                  <div className='bg-white rounded-3xl p-4 shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-1'>
+                    <div className='relative w-full aspect-[3/4] mb-4 overflow-hidden rounded-2xl'>
+                      <Image src={outfit.images?.[0] || '/images/placeholder.jpg'} alt={outfit.title} fill className='object-cover' />
+                    </div>
+                    <h3 className='text-lg font-bold mb-1 line-clamp-2'>{outfit.title}</h3>
+                    <p className='text-sm text-gray-500 mb-3'>{outfit.event} • {outfit.designer}</p>
+                    <div className='flex items-center justify-between'>
+                      <span className='text-primary font-semibold'>View Details</span>
+                      <span className='text-sm text-gray-400'>{outfit.year || ''}</span>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <div className='text-center'>
+              <p className='text-gray-600 mb-6'>No outfits found for this celebrity yet.</p>
+              <Link href='/outfits' className='inline-block bg-primary text-white px-6 py-3 rounded-full font-semibold hover:bg-darkmode transition'>
+                Browse Outfits
+              </Link>
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* People Also Search For - Related Celebrities (outfit-style cards) */}
+      <section className='py-16 bg-grey'>
+        <div className='container mx-auto max-w-7xl px-4'>
+          <h2 className='text-3xl font-bold text-center mb-8'>People also search for</h2>
+          {relatedCelebritiesList.length > 0 ? (
+            <div className='grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6'>
+              {relatedCelebritiesList.map((c: any) => (
+                <Link key={c._id} href={`/celebrities/${c.slug}`} className='group'>
+                  <div className='bg-white rounded-3xl p-4 shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-2'>
+                    <div className='relative w-full aspect-[3/4] mb-4 overflow-hidden rounded-2xl'>
+                      <Image
+                        src={c.profileImage || '/images/placeholder.jpg'}
+                        alt={c.name}
+                        fill
+                        className='object-cover group-hover:scale-105 transition-transform duration-300'
+                      />
+                    </div>
+                    <h3 className='text-sm font-semibold mb-1 line-clamp-2'>{c.name}</h3>
+                    {c.occupation && (
+                      <p className='text-xs text-gray-500 mb-2 line-clamp-1'>
+                        {Array.isArray(c.occupation) ? c.occupation.join(', ') : c.occupation}
+                      </p>
+                    )}
+                    <div className='flex items-center justify-between pt-2 border-t border-gray-100'>
+                      <span className='text-primary text-xs font-semibold'>View Profile</span>
+                      <span className='text-xs text-gray-400'>{/* optional meta */}</span>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <p className='text-center text-gray-600'>No similar celebrities found.</p>
+          )}
         </div>
       </section>
     </main>

@@ -31,6 +31,12 @@ export async function GET(request: NextRequest) {
 
     if (category) query.category = category
     if (isFeatured) query.isFeatured = isFeatured === 'true'
+    // Filter by celebrity ObjectId (optional)
+    const celebrityFilter = searchParams.get('celebrity') || ''
+    if (celebrityFilter) {
+      // accept either ObjectId string
+      query.celebrity = celebrityFilter
+    }
 
     const skip = (page - 1) * limit
 
