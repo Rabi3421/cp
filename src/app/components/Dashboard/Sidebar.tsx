@@ -4,7 +4,7 @@ import { Icon } from '@iconify/react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useAuth } from '@/context/AuthContext'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 interface SubMenuItem {
   label: string
@@ -186,6 +186,24 @@ export default function Sidebar({ isMobileMenuOpen, setIsMobileMenuOpen }: Sideb
   } else {
     items = menuItems
   }
+
+  // Keep submenu open when the current pathname is inside that submenu.
+  // This ensures clicking a submenu link (navigating within the section)
+  // doesn't close the submenu. When navigating outside, the submenu closes.
+  useEffect(() => {
+    const found = items.find((it) => it.submenu && it.submenu.some((s) => s.href === pathname))
+    if (found) {
+      setOpenSubmenu(found.label)
+    } else {
+      // if user navigates away from any submenu item, close currently open submenu
+      setOpenSubmenu((prev) => {
+        // if prev corresponds to a submenu that still contains the path, keep it
+        const prevItem = items.find((it) => it.label === prev && it.submenu)
+        if (prevItem && prevItem.submenu!.some((s) => s.href === pathname)) return prev
+        return null
+      })
+    }
+  }, [pathname])
 
   const toggleSubmenu = (label: string) => {
     setOpenSubmenu(openSubmenu === label ? null : label)
