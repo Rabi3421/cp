@@ -17,6 +17,7 @@
     "bcryptjs": "^3.0.3",
     "cookie": "^1.1.1",
     "date-fns": "^3.4.0",
+    "firebase": "^12.9.0",
     "framer-motion": "^11.11.9",
     "gray-matter": "^4.0.3",
     "jsonwebtoken": "^9.0.3",

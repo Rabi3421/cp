@@ -3,6 +3,14 @@
 import { Icon } from '@iconify/react'
 import { useState, useEffect } from 'react'
 import { format, parse, parseISO } from 'date-fns'
+import { initializeApp, getApps } from 'firebase/app'
+import {
+  getStorage,
+  ref as storageRef,
+  uploadBytesResumable,
+  getDownloadURL,
+  deleteObject,
+} from 'firebase/storage'
 import RichTextEditor from '@/app/components/Common/RichTextEditor'
 
 interface CelebrityFormProps {
@@ -64,6 +72,12 @@ export default function CelebrityForm({
   const [startYear, setStartYear] = useState('')
   const [endYear, setEndYear] = useState('')
   const [isPresent, setIsPresent] = useState(false)
+  const [uploadProgressProfile, setUploadProgressProfile] = useState<number | null>(null)
+  const [uploadProgressCover, setUploadProgressCover] = useState<number | null>(null)
+  const [previewProfile, setPreviewProfile] = useState<string>('')
+  const [previewCover, setPreviewCover] = useState<string>('')
+  const [deletingProfile, setDeletingProfile] = useState(false)
+  const [deletingCover, setDeletingCover] = useState(false)
 
   // conversion helpers
   const cmToInches = (cm: number) => cm / 2.54
@@ -99,6 +113,168 @@ export default function CelebrityForm({
     // unit === 'lb'
     const kg = lbsToKg(n)
     return `${n.toFixed(2)} lbs (${kg.toFixed(1)} kg)`
+  }
+
+  // Firebase init (client) helper
+  const initFirebase = () => {
+    try {
+      if (typeof window === 'undefined') return null
+      if (!getApps().length) {
+        const firebaseConfig = {
+          apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+          authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+          projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+          storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+          messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+          appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+          measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
+        }
+        initializeApp(firebaseConfig)
+      }
+      return getStorage()
+    } catch (err) {
+      console.error('Firebase init error', err)
+      return null
+    }
+  }
+
+  // Upload file to Firebase Storage under provided folder and return download URL
+  const uploadToFirebase = (file: File, folder: string, onProgress?: (pct: number) => void) => {
+    return new Promise<string>((resolve, reject) => {
+      try {
+        const storage = initFirebase()
+        if (!storage) return reject(new Error('Firebase Storage not initialized'))
+        const timestamp = Date.now()
+        const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_')
+        const path = `${folder}/${timestamp}_${safeName}`
+        const fbRef = storageRef(storage, path)
+        const task = uploadBytesResumable(fbRef, file)
+        task.on(
+          'state_changed',
+          (snapshot) => {
+            if (onProgress && snapshot.totalBytes) {
+              const pct = (snapshot.bytesTransferred / snapshot.totalBytes) * 100
+              onProgress(Math.round(pct))
+            }
+          },
+          (err) => reject(err),
+          async () => {
+            try {
+              const url = await getDownloadURL(task.snapshot.ref)
+              resolve(url)
+            } catch (err) {
+              reject(err)
+            }
+          }
+        )
+      } catch (err) {
+        reject(err)
+      }
+    })
+  }
+
+  const slugify = (value: string) =>
+    value
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '')
+
+  const getFolderName = () => {
+    const name = (formData.slug && String(formData.slug)) || (formData.name && String(formData.name))
+    return name ? slugify(name) : ''
+  }
+
+  const handleFileUpload = async (file: File, kind: 'profile' | 'cover') => {
+    try {
+      const folder = getFolderName()
+      if (!folder) {
+        // require name/slug before uploading
+        window.alert('Please enter the celebrity name (full name) before uploading images so a folder can be created.')
+        return
+      }
+      if (kind === 'profile') setUploadProgressProfile(0)
+      else setUploadProgressCover(0)
+      const targetPath = `${folder}/${kind}`
+      const url = await uploadToFirebase(file, targetPath, (pct) => {
+        if (kind === 'profile') setUploadProgressProfile(pct)
+        else setUploadProgressCover(pct)
+      })
+      if (kind === 'profile') {
+        setPreviewProfile(url)
+        setUploadProgressProfile(null)
+        handleChange('profileImage', url)
+      } else {
+        setPreviewCover(url)
+        setUploadProgressCover(null)
+        handleChange('coverImage', url)
+      }
+    } catch (err) {
+      console.error('Upload error', err)
+      if (kind === 'profile') setUploadProgressProfile(null)
+      else setUploadProgressCover(null)
+      // Optionally show toast
+    }
+  }
+
+  // delete file from firebase given a download URL (if possible)
+  const deleteFromFirebaseByUrl = async (url: string) => {
+    try {
+      const m = url.match(/\/(?:o)\/([^?]+)/)
+      if (!m || !m[1]) throw new Error('Not a Firebase Storage URL')
+      const path = decodeURIComponent(m[1])
+      const storage = initFirebase()
+      if (!storage) throw new Error('Firebase not initialized')
+      const fbRef = storageRef(storage, path)
+      await deleteObject(fbRef)
+      return true
+    } catch (err) {
+      console.warn('deleteFromFirebaseByUrl failed', err)
+      throw err
+    }
+  }
+
+  // sync preview when urls change
+  useEffect(() => {
+    setPreviewProfile(formData.profileImage || '')
+  }, [formData.profileImage])
+
+  useEffect(() => {
+    setPreviewCover(formData.coverImage || '')
+  }, [formData.coverImage])
+
+  const handleRemoveImage = async (kind: 'profile' | 'cover') => {
+    const url = kind === 'profile' ? formData.profileImage : formData.coverImage
+    if (!url) return
+    const confirm = window.confirm('Remove this image? This will also delete it from Firebase if it was uploaded.')
+    if (!confirm) return
+    try {
+      if (kind === 'profile') setDeletingProfile(true)
+      else setDeletingCover(true)
+
+      // try deleting from firebase if it looks like a firebase storage download URL
+      if (/\/o\//.test(url)) {
+        try {
+          await deleteFromFirebaseByUrl(url)
+        } catch (err) {
+          // deletion failed - notify but continue to clear
+          console.warn('Failed to delete from Firebase, clearing locally', err)
+          // optionally show alert
+          // window.alert('Failed to delete file from Firebase. The reference will be cleared locally.')
+        }
+      }
+
+      // clear local references
+      if (kind === 'profile') {
+        setPreviewProfile('')
+        handleChange('profileImage', '')
+      } else {
+        setPreviewCover('')
+        handleChange('coverImage', '')
+      }
+    } finally {
+      if (kind === 'profile') setDeletingProfile(false)
+      else setDeletingCover(false)
+    }
   }
 
   useEffect(() => {
@@ -664,7 +840,7 @@ export default function CelebrityForm({
             <div className='space-y-4'>
               <div>
                 <label className='block text-sm font-medium text-black dark:text-white mb-2'>
-                  Profile Image URL
+                  Profile Image (URL or upload)
                 </label>
                 <input
                   type='url'
@@ -673,20 +849,62 @@ export default function CelebrityForm({
                   className='w-full px-4 py-2 border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 text-black dark:text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500'
                   placeholder='https://example.com/image.jpg'
                 />
-                {formData.profileImage && (
-                  <div className='mt-4'>
-                    <img
-                      src={formData.profileImage}
-                      alt='Profile preview'
-                      className='w-32 h-32 rounded-xl object-cover border border-gray-200 dark:border-gray-800'
-                    />
+
+                <div
+                  onDragOver={(e) => e.preventDefault()}
+                  onDrop={(e) => {
+                    e.preventDefault()
+                    const f = e.dataTransfer?.files?.[0]
+                    if (f) handleFileUpload(f, 'profile')
+                  }}
+                  className='mt-3 flex items-center justify-between gap-3 p-4 border-2 border-dashed border-gray-200 dark:border-gray-800 rounded-xl'
+                >
+                  <div className='flex-1'>
+                    <p className='text-sm text-gray-600 dark:text-gray-400'>
+                      Drag & drop an image here, or
+                      <label className='ml-1 text-blue-600 underline cursor-pointer'>
+                        <input
+                          type='file'
+                          accept='image/*'
+                          onChange={(e) => {
+                            const f = e.target.files?.[0]
+                            if (f) handleFileUpload(f, 'profile')
+                          }}
+                          className='hidden'
+                        />
+                        select
+                      </label>
+                    </p>
+                    {uploadProgressProfile !== null && (
+                      <p className='text-sm text-gray-600 mt-2'>Uploading: {uploadProgressProfile}%</p>
+                    )}
                   </div>
-                )}
+                  <div className='w-32 h-32 flex-shrink-0'>
+                    {(previewProfile || formData.profileImage) && (
+                      <div className='relative'>
+                        <img
+                          src={previewProfile || formData.profileImage}
+                          alt='Profile preview'
+                          className='w-32 h-32 rounded-xl object-cover border border-gray-200 dark:border-gray-800'
+                        />
+                        <button
+                          type='button'
+                          onClick={() => handleRemoveImage('profile')}
+                          disabled={deletingProfile}
+                          className='absolute -top-2 -right-2 bg-red-600 text-white rounded-full w-7 h-7 flex items-center justify-center text-xs'
+                          title='Remove'
+                        >
+                          ×
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
 
               <div>
                 <label className='block text-sm font-medium text-black dark:text-white mb-2'>
-                  Cover Image URL
+                  Cover Image (URL or upload)
                 </label>
                 <input
                   type='url'
@@ -695,15 +913,57 @@ export default function CelebrityForm({
                   className='w-full px-4 py-2 border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 text-black dark:text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500'
                   placeholder='https://example.com/cover.jpg'
                 />
-                {formData.coverImage && (
-                  <div className='mt-4'>
-                    <img
-                      src={formData.coverImage}
-                      alt='Cover preview'
-                      className='w-full h-48 rounded-xl object-cover border border-gray-200 dark:border-gray-800'
-                    />
+
+                <div
+                  onDragOver={(e) => e.preventDefault()}
+                  onDrop={(e) => {
+                    e.preventDefault()
+                    const f = e.dataTransfer?.files?.[0]
+                    if (f) handleFileUpload(f, 'cover')
+                  }}
+                  className='mt-3 flex items-center justify-between gap-3 p-4 border-2 border-dashed border-gray-200 dark:border-gray-800 rounded-xl'
+                >
+                  <div className='flex-1'>
+                    <p className='text-sm text-gray-600 dark:text-gray-400'>
+                      Drag & drop an image here, or
+                      <label className='ml-1 text-blue-600 underline cursor-pointer'>
+                        <input
+                          type='file'
+                          accept='image/*'
+                          onChange={(e) => {
+                            const f = e.target.files?.[0]
+                            if (f) handleFileUpload(f, 'cover')
+                          }}
+                          className='hidden'
+                        />
+                        select
+                      </label>
+                    </p>
+                    {uploadProgressCover !== null && (
+                      <p className='text-sm text-gray-600 mt-2'>Uploading: {uploadProgressCover}%</p>
+                    )}
                   </div>
-                )}
+                  <div className='w-48 h-24 flex-shrink-0'>
+                    {(previewCover || formData.coverImage) && (
+                      <div className='relative'>
+                        <img
+                          src={previewCover || formData.coverImage}
+                          alt='Cover preview'
+                          className='w-full h-24 rounded-xl object-cover border border-gray-200 dark:border-gray-800'
+                        />
+                        <button
+                          type='button'
+                          onClick={() => handleRemoveImage('cover')}
+                          disabled={deletingCover}
+                          className='absolute -top-2 -right-2 bg-red-600 text-white rounded-full w-7 h-7 flex items-center justify-center text-xs'
+                          title='Remove'
+                        >
+                          ×
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
           )}
