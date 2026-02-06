@@ -148,7 +148,6 @@ const OutfitDetailPage = async ({ params }: { params: Promise<{ id: string }> })
             {/* Left: Image Gallery */}
             <div className='relative'>
               {/* Client-side gallery with thumbnails */}
-              {/* @ts-expect-error Async server -> client props */}
               <ImageGalleryClient images={outfit.images} featured={outfit.isFeatured} />
               {outfit.isFeatured && (
                 <div className='absolute top-4 right-4 bg-yellow-500 text-white p-3 rounded-full'>
