@@ -2,6 +2,7 @@
 
 import { Icon } from '@iconify/react'
 import { useState, useEffect } from 'react'
+import { format, parse, parseISO } from 'date-fns'
 import RichTextEditor from '@/app/components/Common/RichTextEditor'
 
 interface CelebrityFormProps {
@@ -55,6 +56,51 @@ export default function CelebrityForm({
     },
   })
 
+  const [bornIso, setBornIso] = useState('')
+  const [heightValue, setHeightValue] = useState('')
+  const [heightUnit, setHeightUnit] = useState<'cm' | 'in'>('cm')
+  const [weightValue, setWeightValue] = useState('')
+  const [weightUnit, setWeightUnit] = useState<'kg' | 'lb'>('kg')
+  const [startYear, setStartYear] = useState('')
+  const [endYear, setEndYear] = useState('')
+  const [isPresent, setIsPresent] = useState(false)
+
+  // conversion helpers
+  const cmToInches = (cm: number) => cm / 2.54
+  const inchesToCm = (inch: number) => inch * 2.54
+  const inchesToFeetInches = (inch: number) => {
+    const feet = Math.floor(inch / 12)
+    const inches = Math.round(inch % 12)
+    return { feet, inches }
+  }
+  const formatHeightDisplay = (value: string, unit: string) => {
+    const n = parseFloat(String(value))
+    if (isNaN(n)) return ''
+    if (unit === 'cm') {
+      const inches = cmToInches(n)
+      const { feet, inches: rem } = inchesToFeetInches(inches)
+      return `${feet}'${rem}\" (${Math.round(n)} cm)`
+    }
+    // unit === 'in'
+    const cm = inchesToCm(n)
+    const { feet, inches: rem } = inchesToFeetInches(n)
+    return `${feet}'${rem}\" (${Math.round(cm)} cm)`
+  }
+
+  const kgToLbs = (kg: number) => kg * 2.2046226218
+  const lbsToKg = (lb: number) => lb / 2.2046226218
+  const formatWeightDisplay = (value: string, unit: string) => {
+    const n = parseFloat(String(value))
+    if (isNaN(n)) return ''
+    if (unit === 'kg') {
+      const lbs = kgToLbs(n)
+      return `${n.toFixed(1)} kg (${lbs.toFixed(2)} lbs)`
+    }
+    // unit === 'lb'
+    const kg = lbsToKg(n)
+    return `${n.toFixed(2)} lbs (${kg.toFixed(1)} kg)`
+  }
+
   useEffect(() => {
     if (celebrity) {
       setFormData({
@@ -66,8 +112,123 @@ export default function CelebrityForm({
         career: celebrity.career || '',
         personalLife: celebrity.personalLife || '',
       })
+      // try to populate ISO date input from existing stored value
+      const toIso = (born: any) => {
+        if (!born) return ''
+        // If it's already an ISO-like yyyy-mm-dd or full ISO
+        try {
+          if (typeof born === 'string') {
+            // direct ISO date
+            const isoCandidate = /^\d{4}-\d{2}-\d{2}/.test(born) ? born.slice(0, 10) : ''
+            if (isoCandidate) return isoCandidate
+
+            // try parsing common human format like '12 February 1990'
+            const parsed = parse(born, 'd MMMM yyyy', new Date())
+            if (!isNaN(parsed.getTime())) return parsed.toISOString().slice(0, 10)
+
+            // fallback: try Date.parse
+            const fallback = new Date(born)
+            if (!isNaN(fallback.getTime())) return fallback.toISOString().slice(0, 10)
+          }
+        } catch (err) {
+          return ''
+        }
+        return ''
+      }
+
+      setBornIso(toIso(celebrity.born))
+      // initialize height and weight controls from existing celebrity values
+      try {
+        if (celebrity.height) {
+          const h = String(celebrity.height)
+          // if cm exists in string
+          const cmMatch = h.match(/(\d+(?:\.\d+)?)\s*cm/i)
+          const inMatch = h.match(/(\d+(?:\.\d+)?)\s*(in|lbs|lb|')/i)
+          if (cmMatch) {
+            const cm = parseFloat(cmMatch[1])
+            setHeightUnit('cm')
+            setHeightValue(String(Math.round(cm)))
+            handleChange('height', formatHeightDisplay(String(Math.round(cm)), 'cm'))
+          } else if (inMatch) {
+            const inch = parseFloat(inMatch[1])
+            setHeightUnit('in')
+            setHeightValue(String(inch))
+            handleChange('height', formatHeightDisplay(String(inch), 'in'))
+          }
+        }
+
+        if (celebrity.weight) {
+          const w = String(celebrity.weight)
+          const kgMatch = w.match(/(\d+(?:\.\d+)?)\s*kg/i)
+          const lbMatch = w.match(/(\d+(?:\.\d+)?)\s*lb/i)
+          if (kgMatch) {
+            const kg = parseFloat(kgMatch[1])
+            setWeightUnit('kg')
+            setWeightValue(String(kg))
+            handleChange('weight', formatWeightDisplay(String(kg), 'kg'))
+          } else if (lbMatch) {
+            const lb = parseFloat(lbMatch[1])
+            setWeightUnit('lb')
+            setWeightValue(String(lb))
+            handleChange('weight', formatWeightDisplay(String(lb), 'lb'))
+          }
+        }
+      } catch (err) {
+        // ignore parse errors during init
+      }
+      // parse yearsActive like '2011–Present' or '2011-2015' or '2011–2015'
+      try {
+        if (celebrity.yearsActive) {
+          const ya = String(celebrity.yearsActive)
+          const parts = ya.split(/–|-/).map((p) => p.trim())
+          if (parts.length >= 1) setStartYear(parts[0])
+          if (parts.length >= 2) {
+            if (/present/i.test(parts[1])) {
+              setIsPresent(true)
+              setEndYear('')
+            } else {
+              setEndYear(parts[1])
+              setIsPresent(false)
+            }
+          }
+        }
+      } catch (err) {
+        // ignore
+      }
     }
   }, [celebrity])
+
+  // keep bornIso and formData.born in sync when user or other code updates the display value
+  useEffect(() => {
+    const fromDisplayToIso = (born: any) => {
+      if (!born) return ''
+      try {
+        // try parsing 'd MMMM yyyy'
+        const parsed = parse(born, 'd MMMM yyyy', new Date())
+        if (!isNaN(parsed.getTime())) return parsed.toISOString().slice(0, 10)
+        const parsedIso = parseISO(born)
+        if (!isNaN(parsedIso.getTime())) return parsedIso.toISOString().slice(0, 10)
+        const fallback = new Date(born)
+        if (!isNaN(fallback.getTime())) return fallback.toISOString().slice(0, 10)
+      } catch (err) {
+        return ''
+      }
+      return ''
+    }
+
+    const iso = fromDisplayToIso(formData.born)
+    if (iso && iso !== bornIso) setBornIso(iso)
+  }, [formData.born])
+
+  // when startYear / endYear / isPresent change, update formData.yearsActive
+  useEffect(() => {
+    if (startYear) {
+      const years = isPresent ? `${startYear}–Present` : endYear ? `${startYear}–${endYear}` : `${startYear}`
+      setFormData((prev) => ({ ...prev, yearsActive: years }))
+    } else {
+      setFormData((prev) => ({ ...prev, yearsActive: '' }))
+    }
+  }, [startYear, endYear, isPresent])
 
   const handleChange = (field: string, value: any) => {
     if (field.includes('.')) {
@@ -109,6 +270,9 @@ export default function CelebrityForm({
     { id: 'social', label: 'Social', icon: 'mdi:share-variant' },
     { id: 'publish', label: 'Publish', icon: 'mdi:send' },
   ]
+
+  const currentYear = new Date().getFullYear()
+  const yearOptions = Array.from({ length: currentYear - 1900 + 11 }, (_, i) => 1900 + i).reverse()
 
   return (
     <form onSubmit={handleSubmit} className='space-y-4 sm:space-y-6'>
@@ -199,9 +363,22 @@ export default function CelebrityForm({
                     Date of Birth
                   </label>
                   <input
-                    type='text'
-                    value={formData.born}
-                    onChange={(e) => handleChange('born', e.target.value)}
+                    type='date'
+                    value={bornIso}
+                    onChange={(e) => {
+                      const iso = e.target.value
+                      setBornIso(iso)
+                      if (iso) {
+                        try {
+                          const formatted = format(new Date(iso), 'd MMMM yyyy')
+                          handleChange('born', formatted)
+                        } catch (err) {
+                          handleChange('born', iso)
+                        }
+                      } else {
+                        handleChange('born', '')
+                      }
+                    }}
                     className='w-full px-4 py-2 border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 text-black dark:text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500'
                     placeholder='12 February 1990'
                   />
@@ -249,13 +426,51 @@ export default function CelebrityForm({
                   <label className='block text-sm font-medium text-black dark:text-white mb-2'>
                     Years Active
                   </label>
-                  <input
-                    type='text'
-                    value={formData.yearsActive}
-                    onChange={(e) => handleChange('yearsActive', e.target.value)}
-                    className='w-full px-4 py-2 border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 text-black dark:text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500'
-                    placeholder='2011–Present'
-                  />
+                  <div className='flex items-center gap-2'>
+                    <select
+                      value={startYear}
+                      onChange={(e) => setStartYear(e.target.value)}
+                      className='w-36 px-3 py-2 border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 text-black dark:text-white rounded-xl focus:outline-none'
+                    >
+                      <option value=''>Start year</option>
+                      {yearOptions.map((y) => (
+                        <option key={y} value={String(y)}>
+                          {y}
+                        </option>
+                      ))}
+                    </select>
+
+                    <span className='text-gray-500'>—</span>
+
+                    <select
+                      value={endYear}
+                      onChange={(e) => setEndYear(e.target.value)}
+                      disabled={isPresent}
+                      className='w-36 px-3 py-2 border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 text-black dark:text-white rounded-xl focus:outline-none'
+                    >
+                      <option value=''>End year</option>
+                      {yearOptions.map((y) => (
+                        <option key={y} value={String(y)}>
+                          {y}
+                        </option>
+                      ))}
+                    </select>
+
+                    <label className='ml-3 inline-flex items-center gap-2 text-sm'>
+                      <input
+                        type='checkbox'
+                        checked={isPresent}
+                        onChange={(e) => {
+                          const val = e.target.checked
+                          setIsPresent(val)
+                          if (val) setEndYear('')
+                        }}
+                        className='w-4 h-4'
+                      />
+                      <span className='text-sm text-gray-700 dark:text-gray-300'>Present</span>
+                    </label>
+                  </div>
+                  <p className='text-xs text-gray-500 mt-1'>{formData.yearsActive}</p>
                 </div>
               </div>
 
@@ -264,25 +479,89 @@ export default function CelebrityForm({
                   <label className='block text-sm font-medium text-black dark:text-white mb-2'>
                     Height
                   </label>
-                  <input
-                    type='text'
-                    value={formData.height}
-                    onChange={(e) => handleChange('height', e.target.value)}
-                    className='w-full px-4 py-2 border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 text-black dark:text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500'
-                    placeholder="5'4&quot; (163 cm)"
-                  />
+                  <div className='flex gap-2'>
+                    <input
+                      type='number'
+                      value={heightValue}
+                      onChange={(e) => {
+                        const v = e.target.value
+                        setHeightValue(v)
+                        const display = formatHeightDisplay(v, heightUnit)
+                        handleChange('height', display)
+                      }}
+                      className='w-full px-4 py-2 border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 text-black dark:text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500'
+                      placeholder='163'
+                    />
+                    <select
+                      value={heightUnit}
+                      onChange={(e) => {
+                        const u = e.target.value as 'cm' | 'in'
+                        // when unit changes, convert existing numeric value appropriately
+                        let v = heightValue
+                        if (v) {
+                          const n = parseFloat(v)
+                          if (!isNaN(n)) {
+                            if (u === 'cm' && heightUnit === 'in') {
+                              // convert inches -> cm
+                              v = String(Math.round(inchesToCm(n)))
+                            } else if (u === 'in' && heightUnit === 'cm') {
+                              v = String(parseFloat((cmToInches(n)).toFixed(2)))
+                            }
+                          }
+                        }
+                        setHeightUnit(u)
+                        setHeightValue(v)
+                        handleChange('height', formatHeightDisplay(v, u))
+                      }}
+                      className='px-3 py-2 border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 text-black dark:text-white rounded-xl focus:outline-none'
+                    >
+                      <option value='cm'>cm</option>
+                      <option value='in'>in</option>
+                    </select>
+                  </div>
                 </div>
                 <div>
                   <label className='block text-sm font-medium text-black dark:text-white mb-2'>
                     Weight
                   </label>
-                  <input
-                    type='text'
-                    value={formData.weight}
-                    onChange={(e) => handleChange('weight', e.target.value)}
-                    className='w-full px-4 py-2 border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 text-black dark:text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500'
-                    placeholder='52 kg'
-                  />
+                  <div className='flex gap-2'>
+                    <input
+                      type='number'
+                      value={weightValue}
+                      onChange={(e) => {
+                        const v = e.target.value
+                        setWeightValue(v)
+                        const display = formatWeightDisplay(v, weightUnit)
+                        handleChange('weight', display)
+                      }}
+                      className='w-full px-4 py-2 border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 text-black dark:text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500'
+                      placeholder='52'
+                    />
+                    <select
+                      value={weightUnit}
+                      onChange={(e) => {
+                        const u = e.target.value as 'kg' | 'lb'
+                        let v = weightValue
+                        if (v) {
+                          const n = parseFloat(v)
+                          if (!isNaN(n)) {
+                            if (u === 'kg' && weightUnit === 'lb') {
+                              v = String(parseFloat(lbsToKg(n).toFixed(1)))
+                            } else if (u === 'lb' && weightUnit === 'kg') {
+                              v = String(parseFloat(kgToLbs(n).toFixed(2)))
+                            }
+                          }
+                        }
+                        setWeightUnit(u)
+                        setWeightValue(v)
+                        handleChange('weight', formatWeightDisplay(v, u))
+                      }}
+                      className='px-3 py-2 border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 text-black dark:text-white rounded-xl focus:outline-none'
+                    >
+                      <option value='kg'>kg</option>
+                      <option value='lb'>lbs</option>
+                    </select>
+                  </div>
                 </div>
               </div>
 
