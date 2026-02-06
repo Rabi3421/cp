@@ -158,14 +158,14 @@ export default function OutfitForm({
   ]
 
   return (
-    <form onSubmit={handleSubmit} className='space-y-4 sm:space-y-6'>
+    <form onSubmit={handleSubmit} className='space-y-1 sm:space-y-2 mt-0 -mt-4 sm:-mt-6'>
       {/* Header */}
-      <div className='flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4'>
-        <div>
+      <div className='flex flex-col sm:flex-row items-start sm:items-center justify-between gap-1 py-0'>
+        <div className='flex flex-col sm:flex-row sm:items-center sm:gap-2'>
           <h1 className='text-2xl sm:text-3xl font-bold text-black dark:text-white'>
             {isEdit ? 'Edit Outfit' : 'Add New Outfit'}
           </h1>
-          <p className='text-gray-600 dark:text-gray-400 mt-1 text-sm sm:text-base'>
+          <p className='text-gray-600 dark:text-gray-400 text-sm sm:text-base sm:ml-3'>
             {isEdit ? 'Update outfit details' : 'Create a new celebrity outfit'}
           </p>
         </div>
@@ -173,13 +173,13 @@ export default function OutfitForm({
           <button
             type='button'
             onClick={onCancel}
-            className='flex-1 sm:flex-none px-4 sm:px-6 py-2 sm:py-3 border border-gray-200 dark:border-gray-800 text-black dark:text-white rounded-xl hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors text-sm sm:text-base'
+            className='flex-1 sm:flex-none px-3 sm:px-4 py-1.5 sm:py-2 border border-gray-200 dark:border-gray-800 text-black dark:text-white rounded-xl hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors text-sm sm:text-base'
           >
             Cancel
           </button>
           <button
             type='submit'
-            className='flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 sm:px-6 py-2 sm:py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors text-sm sm:text-base'
+            className='flex-1 sm:flex-none flex items-center justify-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors text-sm sm:text-base'
           >
             <Icon icon='mdi:content-save' width='20' height='20' />
             <span>{isEdit ? 'Update' : 'Create'}</span>
@@ -195,19 +195,19 @@ export default function OutfitForm({
               key={tab.id}
               type='button'
               onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-4 sm:px-6 py-3 sm:py-4 font-medium transition-colors whitespace-nowrap text-sm sm:text-base ${
+              className={`flex items-center gap-2 px-3 sm:px-4 py-2 sm:py-3 font-medium transition-colors whitespace-nowrap text-sm sm:text-base ${
                 activeTab === tab.id
                   ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50 dark:bg-blue-900/10'
                   : 'text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white'
               }`}
             >
-              <Icon icon={tab.icon} width='20' height='20' />
-              <span>{tab.label}</span>
+              <Icon icon={tab.icon} width='18' height='18' />
+              <span className='hidden sm:inline'>{tab.label}</span>
             </button>
           ))}
         </div>
 
-        <div className='p-4 sm:p-6'>
+        <div className='p-2 sm:p-4 max-h-[80vh] overflow-y-auto'>
           {/* Basic Info Tab */}
           {activeTab === 'basic' && (
             <div className='space-y-4'>

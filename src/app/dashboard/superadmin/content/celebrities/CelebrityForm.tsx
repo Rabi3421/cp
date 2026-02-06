@@ -54,7 +54,41 @@ export default function CelebrityForm({
       metaTitle: '',
       metaDescription: '',
       metaKeywords: [],
+      canonicalUrl: '',
+      noindex: false,
+      nofollow: false,
+      robots: 'index, follow',
+      ogTitle: '',
+      ogDescription: '',
+      ogType: 'profile',
+      ogSiteName: 'Celebrity Persona',
+      ogUrl: '',
+      ogImages: [],
+      ogLocale: 'en_US',
+      twitterCard: 'summary_large_image',
+      twitterTitle: '',
+      twitterDescription: '',
+      twitterImage: '',
+      twitterSite: '',
+      twitterCreator: '',
+      schemaType: 'Person',
+      schemaJson: null,
+      publishedTime: '',
+      modifiedTime: '',
+      authorName: '',
+      tags: [],
+      section: '',
+      alternateLangs: [],
+      prevUrl: '',
+      nextUrl: '',
+      canonicalAlternates: [],
       focusKeyword: '',
+      structuredDataDepth: 'full',
+      contentScore: 0,
+      readabilityScore: 0,
+      relatedTopics: [],
+      searchVolume: 0,
+      authorUrl: '',
     },
     socialMedia: {
       instagram: '',
@@ -451,14 +485,14 @@ export default function CelebrityForm({
   const yearOptions = Array.from({ length: currentYear - 1900 + 11 }, (_, i) => 1900 + i).reverse()
 
   return (
-    <form onSubmit={handleSubmit} className='space-y-4 sm:space-y-6'>
+    <form onSubmit={handleSubmit} className='space-y-1 sm:space-y-2 mt-0 -mt-4 sm:-mt-6'>
       {/* Header */}
-      <div className='flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4'>
-        <div>
+      <div className='flex flex-col sm:flex-row items-start sm:items-center justify-between gap-1 py-0'>
+        <div className='flex flex-col sm:flex-row sm:items-center sm:gap-2'>
           <h1 className='text-2xl sm:text-3xl font-bold text-black dark:text-white'>
             {isEdit ? 'Edit Celebrity' : 'Add New Celebrity'}
           </h1>
-          <p className='text-gray-600 dark:text-gray-400 mt-1 text-sm sm:text-base'>
+          <p className='text-gray-600 dark:text-gray-400 text-sm sm:text-base sm:ml-3'>
             {isEdit ? 'Update celebrity profile' : 'Create a new celebrity profile'}
           </p>
         </div>
@@ -466,13 +500,13 @@ export default function CelebrityForm({
           <button
             type='button'
             onClick={onCancel}
-            className='flex-1 sm:flex-none px-4 sm:px-6 py-2 sm:py-3 border border-gray-200 dark:border-gray-800 text-black dark:text-white rounded-xl hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors text-sm sm:text-base'
+            className='flex-1 sm:flex-none px-3 sm:px-4 py-1.5 sm:py-2 border border-gray-200 dark:border-gray-800 text-black dark:text-white rounded-xl hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors text-sm sm:text-base'
           >
             Cancel
           </button>
           <button
             type='submit'
-            className='flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 sm:px-6 py-2 sm:py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors text-sm sm:text-base'
+            className='flex-1 sm:flex-none flex items-center justify-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors text-sm sm:text-base'
           >
             <Icon icon='mdi:content-save' width='20' height='20' />
             <span>{isEdit ? 'Update' : 'Create'}</span>
@@ -482,13 +516,13 @@ export default function CelebrityForm({
 
       {/* Tabs */}
       <div className='bg-white dark:bg-black rounded-2xl shadow-xl border border-gray-200 dark:border-gray-800 overflow-hidden'>
-        <div className='flex overflow-x-auto border-b border-gray-200 dark:border-gray-800 scrollbar-hide'>
+      <div className='flex overflow-x-auto border-b border-gray-200 dark:border-gray-800 scrollbar-hide'>
           {tabs.map((tab) => (
             <button
               key={tab.id}
               type='button'
               onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-4 sm:px-6 py-3 sm:py-4 font-medium transition-colors whitespace-nowrap text-sm sm:text-base ${
+              className={`flex items-center gap-2 px-3 sm:px-4 py-2 sm:py-3 font-medium transition-colors whitespace-nowrap text-sm sm:text-base ${
                 activeTab === tab.id
                   ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50 dark:bg-blue-900/10'
                   : 'text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white'
@@ -500,7 +534,7 @@ export default function CelebrityForm({
           ))}
         </div>
 
-        <div className='p-4 sm:p-6 max-h-[60vh] overflow-y-auto'>
+        <div className='p-2 sm:p-4 max-h-[80vh] overflow-y-auto'>
           {/* Basic Info Tab */}
           {activeTab === 'basic' && (
             <div className='space-y-4'>
@@ -971,69 +1005,254 @@ export default function CelebrityForm({
           {/* SEO Tab */}
           {activeTab === 'seo' && (
             <div className='space-y-4'>
-              <div>
-                <label className='block text-sm font-medium text-black dark:text-white mb-2'>
-                  Meta Title
-                </label>
-                <input
-                  type='text'
-                  value={formData.seo.metaTitle}
-                  onChange={(e) => handleChange('seo.metaTitle', e.target.value)}
-                  className='w-full px-4 py-2 border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 text-black dark:text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500'
-                  placeholder='Celebrity Name Biography & Profile'
-                  maxLength={60}
-                />
-                <p className='text-xs text-gray-500 dark:text-gray-400 mt-1'>
-                  {formData.seo.metaTitle.length}/60 characters
-                </p>
-              </div>
+              <div className='grid grid-cols-1 gap-4'>
+                <div>
+                  <label className='block text-sm font-medium text-black dark:text-white mb-2'>
+                    Meta Title
+                  </label>
+                  <input
+                    type='text'
+                    value={formData.seo.metaTitle}
+                    onChange={(e) => handleChange('seo.metaTitle', e.target.value)}
+                    className='w-full px-4 py-2 border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 text-black dark:text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500'
+                    placeholder='Celebrity Name Biography & Profile'
+                    maxLength={70}
+                  />
+                  <p className='text-xs text-gray-500 dark:text-gray-400 mt-1'>
+                    {formData.seo.metaTitle?.length || 0}/70 characters
+                  </p>
+                </div>
 
-              <div>
-                <label className='block text-sm font-medium text-black dark:text-white mb-2'>
-                  Meta Description
-                </label>
-                <textarea
-                  value={formData.seo.metaDescription}
-                  onChange={(e) => handleChange('seo.metaDescription', e.target.value)}
-                  rows={3}
-                  className='w-full px-4 py-2 border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 text-black dark:text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500'
-                  placeholder='Discover complete biography including age, height, career, movies...'
-                  maxLength={160}
-                />
-                <p className='text-xs text-gray-500 dark:text-gray-400 mt-1'>
-                  {formData.seo.metaDescription.length}/160 characters
-                </p>
-              </div>
+                <div>
+                  <label className='block text-sm font-medium text-black dark:text-white mb-2'>
+                    Meta Description
+                  </label>
+                  <textarea
+                    value={formData.seo.metaDescription}
+                    onChange={(e) => handleChange('seo.metaDescription', e.target.value)}
+                    rows={3}
+                    className='w-full px-4 py-2 border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 text-black dark:text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500'
+                    placeholder='Discover complete biography including age, height, career, movies...'
+                    maxLength={320}
+                  />
+                  <p className='text-xs text-gray-500 dark:text-gray-400 mt-1'>
+                    {formData.seo.metaDescription?.length || 0}/320 characters
+                  </p>
+                </div>
 
-              <div>
-                <label className='block text-sm font-medium text-black dark:text-white mb-2'>
-                  Focus Keyword
-                </label>
-                <input
-                  type='text'
-                  value={formData.seo.focusKeyword}
-                  onChange={(e) => handleChange('seo.focusKeyword', e.target.value)}
-                  className='w-full px-4 py-2 border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 text-black dark:text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500'
-                  placeholder='Celebrity Name Biography'
-                />
-              </div>
+                <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                  <div>
+                    <label className='block text-sm font-medium text-black dark:text-white mb-2'>
+                      Meta Keywords (comma separated)
+                    </label>
+                    <input
+                      type='text'
+                      value={(formData.seo.metaKeywords || []).join(', ')}
+                      onChange={(e) =>
+                        handleChange(
+                          'seo.metaKeywords',
+                          e.target.value ? e.target.value.split(',').map((k) => k.trim()) : []
+                        )
+                      }
+                      className='w-full px-4 py-2 border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 text-black dark:text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500'
+                      placeholder='celebrity name, biography, age, movies'
+                    />
+                  </div>
 
-              <div>
-                <label className='block text-sm font-medium text-black dark:text-white mb-2'>
-                  Meta Keywords (comma separated)
-                </label>
-                <input
-                  type='text'
-                  value={formData.seo.metaKeywords.join(', ')}
-                  onChange={(e) =>
-                    handleChange(
-                      'seo.metaKeywords',
-                      e.target.value.split(',').map((k) => k.trim())
-                    )
-                  }
-                  className='w-full px-4 py-2 border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 text-black dark:text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500'
-                  placeholder='celebrity name, biography, age, movies'
-                />
+                  <div>
+                    <label className='block text-sm font-medium text-black dark:text-white mb-2'>
+                      Focus Keyword
+                    </label>
+                    <input
+                      type='text'
+                      value={formData.seo.focusKeyword}
+                      onChange={(e) => handleChange('seo.focusKeyword', e.target.value)}
+                      className='w-full px-4 py-2 border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 text-black dark:text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500'
+                      placeholder='Celebrity Name Biography'
+                    />
+                  </div>
+                </div>
+
+                <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                  <div>
+                    <label className='block text-sm font-medium text-black dark:text-white mb-2'>
+                      Canonical URL
+                    </label>
+                    <input
+                      type='url'
+                      value={formData.seo.canonicalUrl}
+                      onChange={(e) => handleChange('seo.canonicalUrl', e.target.value)}
+                      className='w-full px-4 py-2 border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 text-black dark:text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500'
+                      placeholder='https://example.com/celebrity/slug'
+                    />
+                  </div>
+
+                  <div className='flex items-center gap-4'>
+                    <label className='inline-flex items-center gap-2'>
+                      <input
+                        type='checkbox'
+                        checked={!!formData.seo.noindex}
+                        onChange={(e) => handleChange('seo.noindex', e.target.checked)}
+                        className='w-4 h-4'
+                      />
+                      <span className='text-sm'>Noindex</span>
+                    </label>
+                    <label className='inline-flex items-center gap-2'>
+                      <input
+                        type='checkbox'
+                        checked={!!formData.seo.nofollow}
+                        onChange={(e) => handleChange('seo.nofollow', e.target.checked)}
+                        className='w-4 h-4'
+                      />
+                      <span className='text-sm'>Nofollow</span>
+                    </label>
+                  </div>
+                </div>
+
+                <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                  <div>
+                    <label className='block text-sm font-medium text-black dark:text-white mb-2'>Open Graph Title</label>
+                    <input
+                      type='text'
+                      value={formData.seo.ogTitle}
+                      onChange={(e) => handleChange('seo.ogTitle', e.target.value)}
+                      className='w-full px-4 py-2 border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 text-black dark:text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500'
+                    />
+                  </div>
+                  <div>
+                    <label className='block text-sm font-medium text-black dark:text-white mb-2'>Open Graph Description</label>
+                    <input
+                      type='text'
+                      value={formData.seo.ogDescription}
+                      onChange={(e) => handleChange('seo.ogDescription', e.target.value)}
+                      className='w-full px-4 py-2 border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 text-black dark:text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500'
+                    />
+                  </div>
+                </div>
+
+                <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
+                  <div>
+                    <label className='block text-sm font-medium text-black dark:text-white mb-2'>OG Type</label>
+                    <input
+                      type='text'
+                      value={formData.seo.ogType}
+                      onChange={(e) => handleChange('seo.ogType', e.target.value)}
+                      className='w-full px-4 py-2 border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 text-black dark:text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500'
+                      placeholder='profile'
+                    />
+                  </div>
+                  <div>
+                    <label className='block text-sm font-medium text-black dark:text-white mb-2'>OG Site Name</label>
+                    <input
+                      type='text'
+                      value={formData.seo.ogSiteName}
+                      onChange={(e) => handleChange('seo.ogSiteName', e.target.value)}
+                      className='w-full px-4 py-2 border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 text-black dark:text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500'
+                    />
+                  </div>
+                  <div>
+                    <label className='block text-sm font-medium text-black dark:text-white mb-2'>OG Locale</label>
+                    <input
+                      type='text'
+                      value={formData.seo.ogLocale}
+                      onChange={(e) => handleChange('seo.ogLocale', e.target.value)}
+                      className='w-full px-4 py-2 border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 text-black dark:text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500'
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className='block text-sm font-medium text-black dark:text-white mb-2'>OG Images (comma separated URLs)</label>
+                  <input
+                    type='text'
+                    value={(formData.seo.ogImages || []).join(', ')}
+                    onChange={(e) => handleChange('seo.ogImages', e.target.value ? e.target.value.split(',').map((s) => s.trim()) : [])}
+                    className='w-full px-4 py-2 border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 text-black dark:text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500'
+                  />
+                </div>
+
+                <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                  <div>
+                    <label className='block text-sm font-medium text-black dark:text-white mb-2'>Twitter Card</label>
+                    <input
+                      type='text'
+                      value={formData.seo.twitterCard}
+                      onChange={(e) => handleChange('seo.twitterCard', e.target.value)}
+                      className='w-full px-4 py-2 border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 text-black dark:text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500'
+                    />
+                  </div>
+                  <div>
+                    <label className='block text-sm font-medium text-black dark:text-white mb-2'>Twitter Image URL</label>
+                    <input
+                      type='url'
+                      value={formData.seo.twitterImage}
+                      onChange={(e) => handleChange('seo.twitterImage', e.target.value)}
+                      className='w-full px-4 py-2 border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 text-black dark:text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500'
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className='block text-sm font-medium text-black dark:text-white mb-2'>Schema JSON</label>
+                  <textarea
+                    value={formData.seo.schemaJson || ''}
+                    onChange={(e) => handleChange('seo.schemaJson', e.target.value)}
+                    rows={6}
+                    className='w-full px-4 py-2 border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 text-black dark:text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500'
+                    placeholder='Paste JSON-LD schema here'
+                  />
+                </div>
+
+                <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
+                  <div>
+                    <label className='block text-sm font-medium text-black dark:text-white mb-2'>Published Time</label>
+                    <input
+                      type='datetime-local'
+                      value={formData.seo.publishedTime || ''}
+                      onChange={(e) => handleChange('seo.publishedTime', e.target.value)}
+                      className='w-full px-3 py-2 border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 text-black dark:text-white rounded-xl focus:outline-none'
+                    />
+                  </div>
+                  <div>
+                    <label className='block text-sm font-medium text-black dark:text-white mb-2'>Modified Time</label>
+                    <input
+                      type='datetime-local'
+                      value={formData.seo.modifiedTime || ''}
+                      onChange={(e) => handleChange('seo.modifiedTime', e.target.value)}
+                      className='w-full px-3 py-2 border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 text-black dark:text-white rounded-xl focus:outline-none'
+                    />
+                  </div>
+                  <div>
+                    <label className='block text-sm font-medium text-black dark:text-white mb-2'>Author Name</label>
+                    <input
+                      type='text'
+                      value={formData.seo.authorName || ''}
+                      onChange={(e) => handleChange('seo.authorName', e.target.value)}
+                      className='w-full px-3 py-2 border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 text-black dark:text-white rounded-xl focus:outline-none'
+                    />
+                  </div>
+                </div>
+
+                <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                  <div>
+                    <label className='block text-sm font-medium text-black dark:text-white mb-2'>Section</label>
+                    <input
+                      type='text'
+                      value={formData.seo.section || ''}
+                      onChange={(e) => handleChange('seo.section', e.target.value)}
+                      className='w-full px-3 py-2 border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 text-black dark:text-white rounded-xl focus:outline-none'
+                    />
+                  </div>
+                  <div>
+                    <label className='block text-sm font-medium text-black dark:text-white mb-2'>Tags (comma separated)</label>
+                    <input
+                      type='text'
+                      value={(formData.seo.tags || []).join(', ')}
+                      onChange={(e) => handleChange('seo.tags', e.target.value ? e.target.value.split(',').map((s) => s.trim()) : [])}
+                      className='w-full px-3 py-2 border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 text-black dark:text-white rounded-xl focus:outline-none'
+                    />
+                  </div>
+                </div>
               </div>
             </div>
           )}
