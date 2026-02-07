@@ -2,7 +2,7 @@
 
 import DashboardLayout from '@/app/components/Dashboard/DashboardLayout'
 import { Icon } from '@iconify/react'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import axios from 'axios'
 import CelebrityList from './CelebrityList'
 import CelebrityForm from './CelebrityForm'
@@ -35,6 +35,40 @@ export default function CelebritiesPage() {
     fetchCelebrities()
   }, [pagination.page, filters])
 
+  // Create a single axios instance (ref) so we don't register multiple interceptors
+  const apiRef = useRef(axios.create({ withCredentials: true }))
+
+  // Register interceptor once
+  useEffect(() => {
+    const apiInstance = apiRef.current
+    const interceptor = apiInstance.interceptors.response.use(
+      (response) => response,
+      async (error) => {
+        const originalRequest = error.config
+        if (!originalRequest) return Promise.reject(error)
+
+        if ((originalRequest as any)._retry) return Promise.reject(error)
+
+        if (error.response && error.response.status === 401) {
+          try {
+            ;(originalRequest as any)._retry = true
+            await axios.post('/api/auth/refresh', null, { withCredentials: true })
+            return apiInstance.request(originalRequest)
+          } catch (refreshError) {
+            console.error('Token refresh failed', refreshError)
+            return Promise.reject(refreshError)
+          }
+        }
+
+        return Promise.reject(error)
+      }
+    )
+
+    return () => {
+      apiInstance.interceptors.response.eject(interceptor)
+    }
+  }, [])
+
   const fetchCelebrities = async () => {
     try {
       setLoading(true)
@@ -47,7 +81,7 @@ export default function CelebritiesPage() {
         sort: filters.sort,
       })
 
-      const response = await axios.get(`/api/superadmin/celebrities?${params}`)
+      const response = await apiRef.current.get(`/api/superadmin/celebrities?${params}`)
       if (response.data.success) {
         setCelebrities(response.data.data)
         setPagination(response.data.pagination)
@@ -74,7 +108,7 @@ export default function CelebritiesPage() {
     if (!confirm('Are you sure you want to delete this celebrity?')) return
 
     try {
-      const response = await axios.delete(`/api/superadmin/celebrities/${id}`)
+      const response = await apiRef.current.delete(`/api/superadmin/celebrities/${id}`)
       if (response.data.success) {
         fetchCelebrities()
         alert('Celebrity deleted successfully')
@@ -88,7 +122,7 @@ export default function CelebritiesPage() {
   const handleSave = async (data: any) => {
     try {
       if (view === 'edit' && selectedCelebrity) {
-        const response = await axios.put(
+        const response = await apiRef.current.put(
           `/api/superadmin/celebrities/${(selectedCelebrity as any)._id}`,
           data
         )
@@ -98,7 +132,7 @@ export default function CelebritiesPage() {
           fetchCelebrities()
         }
       } else {
-        const response = await axios.post('/api/superadmin/celebrities', data)
+        const response = await apiRef.current.post('/api/superadmin/celebrities', data)
         if (response.data.success) {
           alert('Celebrity created successfully')
           setView('list')
