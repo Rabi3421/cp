@@ -24,8 +24,15 @@ const Header: React.FC = () => {
     { label: 'Celebrities', href: '/celebrities' },
     { label: 'Outfit Decode', href: '/outfits' },
     { label: 'News', href: '/news' },
-    { label: 'Blogs', href: '/blogs' },
-    { label: 'Movies', href: '/movies' },
+    {
+      label: 'Movies',
+      href: '/movies',
+      submenu: [
+        { label: 'Movies', href: '/movies' },
+        { label: 'Upcoming Movies', href: '/upcoming-movies' },
+        { label: 'Movie Reviews', href: '/movie-reviews' },
+      ],
+    },
   ]
 
   const handleScroll = () => {

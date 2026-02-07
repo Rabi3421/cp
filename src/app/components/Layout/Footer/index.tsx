@@ -104,7 +104,10 @@ const footer = () => {
                     <Link href='/news' className='text-gray-600 text-sm hover:text-gray-900'>News</Link>
                   </li>
                   <li className='mb-3'>
-                    <Link href='/blogs' className='text-gray-600 text-sm hover:text-gray-900'>Blogs</Link>
+                    <Link href='/movie-reviews' className='text-gray-600 text-sm hover:text-gray-900'>Movie Reviews</Link>
+                  </li>
+                  <li className='mb-3'>
+                    <Link href='/upcoming-movies' className='text-gray-600 text-sm hover:text-gray-900'>Upcoming Movies</Link>
                   </li>
                 </ul>
               </div>
