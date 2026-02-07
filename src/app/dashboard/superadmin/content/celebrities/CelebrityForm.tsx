@@ -1,7 +1,7 @@
 'use client'
 
 import { Icon } from '@iconify/react'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { format, parse, parseISO } from 'date-fns'
 import { initializeApp, getApps } from 'firebase/app'
 import {
@@ -127,6 +127,17 @@ export default function CelebrityForm({
   const [previewCover, setPreviewCover] = useState<string>('')
   const [deletingProfile, setDeletingProfile] = useState(false)
   const [deletingCover, setDeletingCover] = useState(false)
+  // Cover crop modal state
+  const [coverCropOpen, setCoverCropOpen] = useState(false)
+  const [coverCropSrc, setCoverCropSrc] = useState<string>('')
+  const [cropLeft, setCropLeft] = useState<number>(0) // percent
+  const [cropTop, setCropTop] = useState<number>(0) // percent
+  const [cropWidth, setCropWidth] = useState<number>(100) // percent
+  const [cropHeight, setCropHeight] = useState<number>(100) // percent
+  const coverImgRef = useRef<HTMLImageElement | null>(null)
+  const coverPreviewCanvasRef = useRef<HTMLCanvasElement | null>(null)
+  const [coverNaturalWidth, setCoverNaturalWidth] = useState<number>(0)
+  const [coverNaturalHeight, setCoverNaturalHeight] = useState<number>(0)
 
   // conversion helpers
   const cmToInches = (cm: number) => cm / 2.54
@@ -267,6 +278,89 @@ export default function CelebrityForm({
       if (kind === 'profile') setUploadProgressProfile(null)
       else setUploadProgressCover(null)
       // Optionally show toast
+    }
+  }
+
+  // Start crop flow for cover image: load file into dataURL and open modal
+  const startCoverCrop = (file: File) => {
+    const reader = new FileReader()
+    reader.onload = () => {
+      setCoverCropSrc(String(reader.result || ''))
+      setCoverCropOpen(true)
+      setCropLeft(0)
+      setCropTop(0)
+      setCropWidth(100)
+      setCropHeight(100)
+    }
+    reader.readAsDataURL(file)
+  }
+
+  const onCoverImageLoad = () => {
+    const img = coverImgRef.current
+    if (!img) return
+    setCoverNaturalWidth(img.naturalWidth)
+    setCoverNaturalHeight(img.naturalHeight)
+    // draw initial preview
+    requestAnimationFrame(() => drawCoverPreview())
+  }
+
+  const drawCoverPreview = () => {
+    const img = coverImgRef.current
+    const canvas = coverPreviewCanvasRef.current
+    if (!img || !canvas) return
+    const sx = Math.round((cropLeft / 100) * coverNaturalWidth)
+    const sy = Math.round((cropTop / 100) * coverNaturalHeight)
+    const sw = Math.round((cropWidth / 100) * coverNaturalWidth)
+    const sh = Math.round((cropHeight / 100) * coverNaturalHeight)
+    // set canvas size to preview size (keep a max width)
+    const previewW = Math.min(800, sw)
+    const scale = previewW / sw
+    canvas.width = Math.round(sw * scale)
+    canvas.height = Math.round(sh * scale)
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+    ctx.clearRect(0, 0, canvas.width, canvas.height)
+    ctx.drawImage(img, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height)
+  }
+
+  useEffect(() => {
+    if (coverCropOpen) drawCoverPreview()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cropLeft, cropTop, cropWidth, cropHeight, coverNaturalWidth, coverNaturalHeight, coverCropSrc])
+
+  const handleCancelCoverCrop = () => {
+    setCoverCropOpen(false)
+    setCoverCropSrc('')
+  }
+
+  const handleCropAndUpload = async () => {
+    try {
+      if (!coverPreviewCanvasRef.current) return
+      // convert canvas to blob
+      const blob = await new Promise<Blob | null>((resolve) =>
+        coverPreviewCanvasRef.current!.toBlob((b) => resolve(b), 'image/png')
+      )
+      if (!blob) throw new Error('Failed to create cropped image')
+
+      const croppedFile = new File([blob], `${Date.now()}_cover_cropped.png`, { type: 'image/png' })
+      // reuse upload flow but set cover progress
+      const folder = getFolderName()
+      if (!folder) {
+        window.alert('Please enter the celebrity name (full name) before uploading images so a folder can be created.')
+        return
+      }
+      setUploadProgressCover(0)
+      const targetPath = `${folder}/cover`
+      const url = await uploadToFirebase(croppedFile, targetPath, (pct) => setUploadProgressCover(pct))
+      setPreviewCover(url)
+      setUploadProgressCover(null)
+      handleChange('coverImage', url)
+      setCoverCropOpen(false)
+      setCoverCropSrc('')
+    } catch (err) {
+      console.error('Crop upload error', err)
+      setUploadProgressCover(null)
+      // keep modal open for retry or cancel
     }
   }
 
@@ -1324,6 +1418,49 @@ export default function CelebrityForm({
             </div>
           )}
 
+              {/* Cover Crop Modal */}
+              {coverCropOpen && (
+                <div className='fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50'>
+                  <div className='bg-white dark:bg-gray-900 rounded-xl w-11/12 max-w-4xl p-4'>
+                    <div className='flex items-center justify-between mb-3'>
+                      <h3 className='text-lg font-medium text-black dark:text-white'>Crop Cover Image</h3>
+                      <button onClick={handleCancelCoverCrop} className='text-sm px-3 py-1 rounded bg-gray-200 dark:bg-gray-800'>Cancel</button>
+                    </div>
+
+                    <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                      <div className='flex flex-col items-center'>
+                        <div className='border p-2 rounded w-full'>
+                          <img ref={coverImgRef} src={coverCropSrc} onLoad={onCoverImageLoad} alt='To crop' className='max-w-full max-h-[60vh] object-contain' />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className='block text-sm text-gray-700 dark:text-gray-300 mb-2'>Crop Left (%)</label>
+                        <input type='range' min={0} max={100} value={cropLeft} onChange={(e) => setCropLeft(Number(e.target.value))} />
+                        <label className='block text-sm text-gray-700 dark:text-gray-300 mt-2 mb-2'>Crop Top (%)</label>
+                        <input type='range' min={0} max={100} value={cropTop} onChange={(e) => setCropTop(Number(e.target.value))} />
+                        <label className='block text-sm text-gray-700 dark:text-gray-300 mt-2 mb-2'>Crop Width (%)</label>
+                        <input type='range' min={10} max={100} value={cropWidth} onChange={(e) => setCropWidth(Number(e.target.value))} />
+                        <label className='block text-sm text-gray-700 dark:text-gray-300 mt-2 mb-2'>Crop Height (%)</label>
+                        <input type='range' min={10} max={100} value={cropHeight} onChange={(e) => setCropHeight(Number(e.target.value))} />
+
+                        <div className='mt-4'>
+                          <p className='text-sm text-gray-600 dark:text-gray-400 mb-2'>Preview</p>
+                          <div className='border overflow-hidden rounded'>
+                            <canvas ref={coverPreviewCanvasRef} className='w-full' />
+                          </div>
+                        </div>
+
+                        <div className='flex justify-end gap-2 mt-4'>
+                          <button onClick={handleCancelCoverCrop} className='px-3 py-1 bg-gray-200 rounded'>Cancel</button>
+                          <button onClick={handleCropAndUpload} className='px-3 py-1 bg-blue-600 text-white rounded'>Crop & Upload</button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
           {/* Awards Tab */}
           {activeTab === 'awards' && (
             <div className='space-y-4'>
@@ -1549,7 +1686,7 @@ export default function CelebrityForm({
                   onDrop={(e) => {
                     e.preventDefault()
                     const f = e.dataTransfer?.files?.[0]
-                    if (f) handleFileUpload(f, 'cover')
+                    if (f) startCoverCrop(f)
                   }}
                   className='mt-3 flex items-center justify-between gap-3 p-4 border-2 border-dashed border-gray-200 dark:border-gray-800 rounded-xl'
                 >
@@ -1562,7 +1699,7 @@ export default function CelebrityForm({
                           accept='image/*'
                           onChange={(e) => {
                             const f = e.target.files?.[0]
-                            if (f) handleFileUpload(f, 'cover')
+                            if (f) startCoverCrop(f)
                           }}
                           className='hidden'
                         />
