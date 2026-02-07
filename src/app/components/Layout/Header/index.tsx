@@ -101,7 +101,7 @@ const Header: React.FC = () => {
           >
             <div className='flex items-center gap-3'>
               <a
-                href='https://www.instagram.com'
+                href='https://www.instagram.com/celebritypersona/'
                 target='_blank'
                 rel='noopener noreferrer'
                 aria-label='Instagram'
