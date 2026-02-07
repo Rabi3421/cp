@@ -66,7 +66,6 @@ export default function RichTextEditor({
     'background',
     'script',
     'list',
-    'bullet',
     'indent',
     'align',
     'blockquote',

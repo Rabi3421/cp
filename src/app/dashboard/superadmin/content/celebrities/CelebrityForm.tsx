@@ -474,7 +474,10 @@ export default function CelebrityForm({
 
   const tabs = [
     { id: 'basic', label: 'Basic Info', icon: 'mdi:account' },
-    { id: 'content', label: 'Content', icon: 'mdi:text-box' },
+    { id: 'introduction', label: 'Introduction', icon: 'mdi:text-box' },
+    { id: 'earlyLife', label: 'Early Life', icon: 'mdi:book-open' },
+    { id: 'career', label: 'Career', icon: 'mdi:briefcase' },
+    { id: 'personalLife', label: 'Personal Life', icon: 'mdi:account-heart' },
     { id: 'media', label: 'Media', icon: 'mdi:image' },
     { id: 'seo', label: 'SEO', icon: 'mdi:search-web' },
     { id: 'social', label: 'Social', icon: 'mdi:share-variant' },
@@ -832,39 +835,54 @@ export default function CelebrityForm({
             </div>
           )}
 
-          {/* Content Tab */}
-          {activeTab === 'content' && (
+          {/* Introduction Tab */}
+          {activeTab === 'introduction' && (
             <div className='space-y-6'>
               <RichTextEditor
                 label='Introduction'
                 value={formData.introduction}
                 onChange={(value) => handleChange('introduction', value)}
                 placeholder='Write an engaging introduction about the celebrity...'
-                height='250px'
+                height='520px'
               />
+            </div>
+          )}
 
+          {/* Early Life Tab */}
+          {activeTab === 'earlyLife' && (
+            <div className='space-y-6'>
               <RichTextEditor
                 label='Early Life'
                 value={formData.earlyLife}
                 onChange={(value) => handleChange('earlyLife', value)}
                 placeholder='Write about their early life, childhood, education...'
-                height='250px'
+                height='520px'
               />
+            </div>
+          )}
 
+          {/* Career Tab */}
+          {activeTab === 'career' && (
+            <div className='space-y-6'>
               <RichTextEditor
                 label='Career'
                 value={formData.career}
                 onChange={(value) => handleChange('career', value)}
                 placeholder='Write about their career journey, achievements, milestones...'
-                height='250px'
+                height='520px'
               />
+            </div>
+          )}
 
+          {/* Personal Life Tab */}
+          {activeTab === 'personalLife' && (
+            <div className='space-y-6'>
               <RichTextEditor
                 label='Personal Life'
                 value={formData.personalLife}
                 onChange={(value) => handleChange('personalLife', value)}
                 placeholder='Write about their personal life, family, relationships...'
-                height='250px'
+                height='520px'
               />
             </div>
           )}
