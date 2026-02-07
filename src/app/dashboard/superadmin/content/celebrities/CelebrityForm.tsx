@@ -34,14 +34,28 @@ export default function CelebrityForm({
     birthPlace: '',
     age: 0,
     nationality: '',
+    died: '',
+    citizenship: [],
     profession: [],
     yearsActive: '',
     height: '',
     weight: '',
+    bodyMeasurements: '',
+    eyeColor: '',
+    hairColor: '',
+    spouse: '',
+    children: [],
+    parents: [],
+    siblings: [],
+    relatives: [],
+    education: [],
+    netWorth: '',
     introduction: '',
     earlyLife: '',
     career: '',
     personalLife: '',
+    movies: [],
+    awards: [],
     profileImage: '',
     coverImage: '',
     categories: [],
@@ -99,6 +113,7 @@ export default function CelebrityForm({
   })
 
   const [bornIso, setBornIso] = useState('')
+  const [diedIso, setDiedIso] = useState('')
   const [heightValue, setHeightValue] = useState('')
   const [heightUnit, setHeightUnit] = useState<'cm' | 'in'>('cm')
   const [weightValue, setWeightValue] = useState('')
@@ -116,6 +131,11 @@ export default function CelebrityForm({
   // conversion helpers
   const cmToInches = (cm: number) => cm / 2.54
   const inchesToCm = (inch: number) => inch * 2.54
+      // Draft + edit index state for movies and awards (single-form UX)
+      const [movieDraft, setMovieDraft] = useState({ name: '', role: '', year: '', director: '', genre: '', description: '' })
+      const [movieEditIndex, setMovieEditIndex] = useState<number | null>(null)
+      const [awardDraft, setAwardDraft] = useState({ title: '', category: '', year: '', organization: '', work: '', description: '' })
+      const [awardEditIndex, setAwardEditIndex] = useState<number | null>(null)
   const inchesToFeetInches = (inch: number) => {
     const feet = Math.floor(inch / 12)
     const inches = Math.round(inch % 12)
@@ -321,6 +341,8 @@ export default function CelebrityForm({
         earlyLife: celebrity.earlyLife || '',
         career: celebrity.career || '',
         personalLife: celebrity.personalLife || '',
+        movies: celebrity.movies || [],
+        awards: celebrity.awards || [],
       })
       // try to populate ISO date input from existing stored value
       const toIso = (born: any) => {
@@ -347,6 +369,7 @@ export default function CelebrityForm({
       }
 
       setBornIso(toIso(celebrity.born))
+      setDiedIso(toIso(celebrity.died))
       // initialize height and weight controls from existing celebrity values
       try {
         if (celebrity.height) {
@@ -428,7 +451,9 @@ export default function CelebrityForm({
 
     const iso = fromDisplayToIso(formData.born)
     if (iso && iso !== bornIso) setBornIso(iso)
-  }, [formData.born])
+    const isoDied = fromDisplayToIso(formData.died)
+    if (isoDied && isoDied !== diedIso) setDiedIso(isoDied)
+  }, [formData.born, formData.died])
 
   // when startYear / endYear / isPresent change, update formData.yearsActive
   useEffect(() => {
@@ -472,12 +497,106 @@ export default function CelebrityForm({
     onSave(formData)
   }
 
+  // Movie & Award handlers (single-form UX)
+  const handleRemoveMovie = (index: number) => {
+    setFormData((prev) => {
+      const movies = Array.isArray((prev as any).movies) ? [...(prev as any).movies] : []
+      movies.splice(index, 1)
+      return { ...prev, movies }
+    })
+    // if we were editing this item, cancel draft
+    if (movieEditIndex === index) {
+      setMovieDraft({ name: '', role: '', year: '', director: '', genre: '', description: '' })
+      setMovieEditIndex(null)
+    }
+  }
+
+  const handleRemoveAward = (index: number) => {
+    setFormData((prev) => {
+      const awards = Array.isArray((prev as any).awards) ? [...(prev as any).awards] : []
+      awards.splice(index, 1)
+      return { ...prev, awards }
+    })
+    if (awardEditIndex === index) {
+      setAwardDraft({ title: '', category: '', year: '', organization: '', work: '', description: '' })
+      setAwardEditIndex(null)
+    }
+  }
+
+  const handleMovieDraftChange = (field: string, value: any) => {
+    setMovieDraft((prev) => ({ ...prev, [field]: value }))
+  }
+
+  const handleSaveMovieDraft = () => {
+    setFormData((prev) => {
+      const movies = Array.isArray((prev as any).movies) ? [...(prev as any).movies] : []
+      if (movieEditIndex !== null && movieEditIndex >= 0 && movieEditIndex < movies.length) {
+        movies[movieEditIndex] = { ...movieDraft }
+      } else {
+        movies.push({ ...movieDraft })
+      }
+      return { ...prev, movies }
+    })
+    setMovieDraft({ name: '', role: '', year: '', director: '', genre: '', description: '' })
+    setMovieEditIndex(null)
+  }
+
+  const handleEditMovieFromList = (index: number) => {
+    const movies = Array.isArray((formData as any).movies) ? (formData as any).movies : []
+    const m = movies[index]
+    if (m) {
+      setMovieDraft({ name: m.name || '', role: m.role || '', year: m.year || '', director: m.director || '', genre: m.genre || '', description: m.description || '' })
+      setMovieEditIndex(index)
+      setActiveTab('movies')
+    }
+  }
+
+  const handleCancelMovieEdit = () => {
+    setMovieDraft({ name: '', role: '', year: '', director: '', genre: '', description: '' })
+    setMovieEditIndex(null)
+  }
+
+  const handleAwardDraftChange = (field: string, value: any) => {
+    setAwardDraft((prev) => ({ ...prev, [field]: value }))
+  }
+
+  const handleSaveAwardDraft = () => {
+    setFormData((prev) => {
+      const awards = Array.isArray((prev as any).awards) ? [...(prev as any).awards] : []
+      if (awardEditIndex !== null && awardEditIndex >= 0 && awardEditIndex < awards.length) {
+        awards[awardEditIndex] = { ...awardDraft }
+      } else {
+        awards.push({ ...awardDraft })
+      }
+      return { ...prev, awards }
+    })
+    setAwardDraft({ title: '', category: '', year: '', organization: '', work: '', description: '' })
+    setAwardEditIndex(null)
+  }
+
+  const handleEditAwardFromList = (index: number) => {
+    const awards = Array.isArray((formData as any).awards) ? (formData as any).awards : []
+    const a = awards[index]
+    if (a) {
+      setAwardDraft({ title: a.title || '', category: a.category || '', year: a.year || '', organization: a.organization || '', work: a.work || '', description: a.description || '' })
+      setAwardEditIndex(index)
+      setActiveTab('awards')
+    }
+  }
+
+  const handleCancelAwardEdit = () => {
+    setAwardDraft({ title: '', category: '', year: '', organization: '', work: '', description: '' })
+    setAwardEditIndex(null)
+  }
+
   const tabs = [
     { id: 'basic', label: 'Basic Info', icon: 'mdi:account' },
     { id: 'introduction', label: 'Introduction', icon: 'mdi:text-box' },
     { id: 'earlyLife', label: 'Early Life', icon: 'mdi:book-open' },
     { id: 'career', label: 'Career', icon: 'mdi:briefcase' },
     { id: 'personalLife', label: 'Personal Life', icon: 'mdi:account-heart' },
+    { id: 'movies', label: 'Movies', icon: 'mdi:movie' },
+    { id: 'awards', label: 'Awards', icon: 'mdi:trophy' },
     { id: 'media', label: 'Media', icon: 'mdi:image' },
     { id: 'seo', label: 'SEO', icon: 'mdi:search-web' },
     { id: 'social', label: 'Social', icon: 'mdi:share-variant' },
@@ -780,6 +899,183 @@ export default function CelebrityForm({
 
               <div>
                 <label className='block text-sm font-medium text-black dark:text-white mb-2'>
+                  Body Measurements
+                </label>
+                <input
+                  type='text'
+                  value={formData.bodyMeasurements}
+                  onChange={(e) => handleChange('bodyMeasurements', e.target.value)}
+                  className='w-full px-4 py-2 border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 text-black dark:text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500'
+                  placeholder='Bust - Waist - Hip (e.g. 32-24-34)'
+                />
+              </div>
+              
+              <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                <div>
+                  <label className='block text-sm font-medium text-black dark:text-white mb-2'>
+                    Died
+                  </label>
+                  <input
+                    type='date'
+                    value={diedIso}
+                    onChange={(e) => {
+                      const iso = e.target.value
+                      setDiedIso(iso)
+                      if (iso) {
+                        try {
+                          const formatted = format(new Date(iso), 'd MMMM yyyy')
+                          handleChange('died', formatted)
+                        } catch (err) {
+                          handleChange('died', iso)
+                        }
+                      } else {
+                        handleChange('died', '')
+                      }
+                    }}
+                    className='w-full px-4 py-2 border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 text-black dark:text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500'
+                  />
+                </div>
+
+                <div>
+                  <label className='block text-sm font-medium text-black dark:text-white mb-2'>
+                    Net Worth
+                  </label>
+                  <input
+                    type='text'
+                    value={formData.netWorth}
+                    onChange={(e) => handleChange('netWorth', e.target.value)}
+                    className='w-full px-4 py-2 border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 text-black dark:text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500'
+                    placeholder='e.g. $1M'
+                  />
+                </div>
+              </div>
+
+              <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
+                <div>
+                  <label className='block text-sm font-medium text-black dark:text-white mb-2'>
+                    Citizenship (comma separated)
+                  </label>
+                  <input
+                    type='text'
+                    value={(formData.citizenship || []).join(', ')}
+                    onChange={(e) => handleChange('citizenship', e.target.value ? e.target.value.split(',').map((s) => s.trim()) : [])}
+                    className='w-full px-4 py-2 border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 text-black dark:text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500'
+                    placeholder='Country1, Country2'
+                  />
+                </div>
+
+                <div>
+                  <label className='block text-sm font-medium text-black dark:text-white mb-2'>
+                    Eye Color
+                  </label>
+                  <input
+                    type='text'
+                    value={formData.eyeColor}
+                    onChange={(e) => handleChange('eyeColor', e.target.value)}
+                    className='w-full px-4 py-2 border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 text-black dark:text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500'
+                    placeholder='e.g. Brown'
+                  />
+                </div>
+
+                <div>
+                  <label className='block text-sm font-medium text-black dark:text-white mb-2'>
+                    Hair Color
+                  </label>
+                  <input
+                    type='text'
+                    value={formData.hairColor}
+                    onChange={(e) => handleChange('hairColor', e.target.value)}
+                    className='w-full px-4 py-2 border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 text-black dark:text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500'
+                    placeholder='e.g. Black'
+                  />
+                </div>
+              </div>
+
+              <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                <div>
+                  <label className='block text-sm font-medium text-black dark:text-white mb-2'>
+                    Spouse
+                  </label>
+                  <input
+                    type='text'
+                    value={formData.spouse}
+                    onChange={(e) => handleChange('spouse', e.target.value)}
+                    className='w-full px-4 py-2 border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 text-black dark:text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500'
+                    placeholder='Name of spouse (if applicable)'
+                  />
+                </div>
+
+                <div>
+                  <label className='block text-sm font-medium text-black dark:text-white mb-2'>
+                    Children (comma separated)
+                  </label>
+                  <input
+                    type='text'
+                    value={(formData.children || []).join(', ')}
+                    onChange={(e) => handleChange('children', e.target.value ? e.target.value.split(',').map((s) => s.trim()) : [])}
+                    className='w-full px-4 py-2 border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 text-black dark:text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500'
+                    placeholder='Child1, Child2'
+                  />
+                </div>
+              </div>
+
+              <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                <div>
+                  <label className='block text-sm font-medium text-black dark:text-white mb-2'>
+                    Parents (comma separated)
+                  </label>
+                  <input
+                    type='text'
+                    value={(formData.parents || []).join(', ')}
+                    onChange={(e) => handleChange('parents', e.target.value ? e.target.value.split(',').map((s) => s.trim()) : [])}
+                    className='w-full px-4 py-2 border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 text-black dark:text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500'
+                    placeholder='Parent1, Parent2'
+                  />
+                </div>
+
+                <div>
+                  <label className='block text-sm font-medium text-black dark:text-white mb-2'>
+                    Siblings (comma separated)
+                  </label>
+                  <input
+                    type='text'
+                    value={(formData.siblings || []).join(', ')}
+                    onChange={(e) => handleChange('siblings', e.target.value ? e.target.value.split(',').map((s) => s.trim()) : [])}
+                    className='w-full px-4 py-2 border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 text-black dark:text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500'
+                    placeholder='Sibling1, Sibling2'
+                  />
+                </div>
+              </div>
+
+              <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                <div>
+                  <label className='block text-sm font-medium text-black dark:text-white mb-2'>
+                    Relatives (comma separated)
+                  </label>
+                  <input
+                    type='text'
+                    value={(formData.relatives || []).join(', ')}
+                    onChange={(e) => handleChange('relatives', e.target.value ? e.target.value.split(',').map((s) => s.trim()) : [])}
+                    className='w-full px-4 py-2 border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 text-black dark:text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500'
+                    placeholder='Relative1, Relative2'
+                  />
+                </div>
+
+                <div>
+                  <label className='block text-sm font-medium text-black dark:text-white mb-2'>
+                    Education (comma separated)
+                  </label>
+                  <input
+                    type='text'
+                    value={(formData.education || []).join(', ')}
+                    onChange={(e) => handleChange('education', e.target.value ? e.target.value.split(',').map((s) => s.trim()) : [])}
+                    className='w-full px-4 py-2 border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 text-black dark:text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500'
+                    placeholder='School, Degree'
+                  />
+                </div>
+              </div>
+              <div>
+                <label className='block text-sm font-medium text-black dark:text-white mb-2'>
                   Profession (comma separated)
                 </label>
                 <input
@@ -884,6 +1180,288 @@ export default function CelebrityForm({
                 placeholder='Write about their personal life, family, relationships...'
                 height='520px'
               />
+            </div>
+          )}
+
+          {/* Movies Tab */}
+          {activeTab === 'movies' && (
+            <div className='space-y-4'>
+              <div>
+                <h3 className='text-lg font-medium'>Filmography / Movies</h3>
+              </div>
+
+              {/* Single-entry form */}
+              <div className='p-3 border border-gray-200 dark:border-gray-800 rounded-xl space-y-3'>
+                <div className='grid grid-cols-1 md:grid-cols-3 gap-3'>
+                  <input
+                    type='text'
+                    value={movieDraft.name}
+                    onChange={(e) => handleMovieDraftChange('name', e.target.value)}
+                    placeholder='Movie name'
+                    className='w-full px-3 py-2 border rounded-xl'
+                  />
+                  <input
+                    type='text'
+                    value={movieDraft.role}
+                    onChange={(e) => handleMovieDraftChange('role', e.target.value)}
+                    placeholder='Role / character'
+                    className='w-full px-3 py-2 border rounded-xl'
+                  />
+                  <input
+                    type='text'
+                    value={movieDraft.year}
+                    onChange={(e) => handleMovieDraftChange('year', e.target.value)}
+                    placeholder='Year'
+                    className='w-full px-3 py-2 border rounded-xl'
+                  />
+                </div>
+
+                <div className='grid grid-cols-1 md:grid-cols-2 gap-3'>
+                  <input
+                    type='text'
+                    value={movieDraft.director}
+                    onChange={(e) => handleMovieDraftChange('director', e.target.value)}
+                    placeholder='Director'
+                    className='w-full px-3 py-2 border rounded-xl'
+                  />
+                  <input
+                    type='text'
+                    value={movieDraft.genre}
+                    onChange={(e) => handleMovieDraftChange('genre', e.target.value)}
+                    placeholder='Genre'
+                    className='w-full px-3 py-2 border rounded-xl'
+                  />
+                </div>
+
+                <textarea
+                  value={movieDraft.description}
+                  onChange={(e) => handleMovieDraftChange('description', e.target.value)}
+                  placeholder='Short description'
+                  className='w-full px-3 py-2 border rounded-xl'
+                  rows={3}
+                />
+
+                <div className='flex justify-end gap-2'>
+                  {movieEditIndex !== null ? (
+                    <>
+                      <button
+                        type='button'
+                        onClick={handleCancelMovieEdit}
+                        className='px-3 py-1 bg-gray-300 text-black rounded-xl text-sm'
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type='button'
+                        onClick={handleSaveMovieDraft}
+                        disabled={!movieDraft.name?.trim()}
+                        className='px-3 py-1 bg-blue-600 text-white rounded-xl text-sm disabled:opacity-50'
+                      >
+                        Update Movie
+                      </button>
+                    </>
+                  ) : (
+                    <button
+                      type='button'
+                      onClick={handleSaveMovieDraft}
+                      disabled={!movieDraft.name?.trim()}
+                      className='px-3 py-1 bg-green-600 text-white rounded-xl text-sm disabled:opacity-50'
+                    >
+                      Add Movie
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Movies list */}
+              {(formData as any).movies && (formData as any).movies.length > 0 ? (
+                <div className='overflow-x-auto'>
+                  <table className='w-full text-left border-collapse'>
+                    <thead>
+                      <tr className='text-sm text-gray-600 dark:text-gray-300'>
+                        <th className='py-2 pr-4'>#</th>
+                        <th className='py-2 pr-4'>Name</th>
+                        <th className='py-2 pr-4'>Role</th>
+                        <th className='py-2 pr-4'>Year</th>
+                        <th className='py-2 pr-4'>Director</th>
+                        <th className='py-2 pr-4'>Genre</th>
+                        <th className='py-2 pr-4'>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {(formData as any).movies.map((m: any, idx: number) => (
+                        <tr key={idx} className='border-t border-gray-100 dark:border-gray-800'>
+                          <td className='py-2 pr-4 text-sm'>{idx + 1}</td>
+                          <td className='py-2 pr-4 text-sm'>{m.name}</td>
+                          <td className='py-2 pr-4 text-sm'>{m.role}</td>
+                          <td className='py-2 pr-4 text-sm'>{m.year}</td>
+                          <td className='py-2 pr-4 text-sm'>{m.director}</td>
+                          <td className='py-2 pr-4 text-sm'>{m.genre}</td>
+                          <td className='py-2 pr-4 text-sm'>
+                            <button
+                              type='button'
+                              onClick={() => handleEditMovieFromList(idx)}
+                              className='mr-2 px-2 py-1 bg-yellow-500 text-white rounded-lg text-xs'
+                            >
+                              Edit
+                            </button>
+                            <button
+                              type='button'
+                              onClick={() => handleRemoveMovie(idx)}
+                              className='px-2 py-1 bg-red-600 text-white rounded-lg text-xs'
+                            >
+                              Delete
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <p className='text-sm text-gray-500'>No movies added yet.</p>
+              )}
+            </div>
+          )}
+
+          {/* Awards Tab */}
+          {activeTab === 'awards' && (
+            <div className='space-y-4'>
+              <div>
+                <h3 className='text-lg font-medium'>Awards & Recognitions</h3>
+              </div>
+
+              {/* Single-entry form */}
+              <div className='p-3 border border-gray-200 dark:border-gray-800 rounded-xl space-y-3'>
+                <div className='grid grid-cols-1 md:grid-cols-3 gap-3'>
+                  <input
+                    type='text'
+                    value={awardDraft.title}
+                    onChange={(e) => handleAwardDraftChange('title', e.target.value)}
+                    placeholder='Award title'
+                    className='w-full px-3 py-2 border rounded-xl'
+                  />
+                  <input
+                    type='text'
+                    value={awardDraft.category}
+                    onChange={(e) => handleAwardDraftChange('category', e.target.value)}
+                    placeholder='Category'
+                    className='w-full px-3 py-2 border rounded-xl'
+                  />
+                  <input
+                    type='text'
+                    value={awardDraft.year}
+                    onChange={(e) => handleAwardDraftChange('year', e.target.value)}
+                    placeholder='Year'
+                    className='w-full px-3 py-2 border rounded-xl'
+                  />
+                </div>
+
+                <div className='grid grid-cols-1 md:grid-cols-2 gap-3'>
+                  <input
+                    type='text'
+                    value={awardDraft.organization}
+                    onChange={(e) => handleAwardDraftChange('organization', e.target.value)}
+                    placeholder='Organization'
+                    className='w-full px-3 py-2 border rounded-xl'
+                  />
+                  <input
+                    type='text'
+                    value={awardDraft.work}
+                    onChange={(e) => handleAwardDraftChange('work', e.target.value)}
+                    placeholder='Work (for which award)'
+                    className='w-full px-3 py-2 border rounded-xl'
+                  />
+                </div>
+
+                <textarea
+                  value={awardDraft.description}
+                  onChange={(e) => handleAwardDraftChange('description', e.target.value)}
+                  placeholder='Short description'
+                  className='w-full px-3 py-2 border rounded-xl'
+                  rows={3}
+                />
+
+                <div className='flex justify-end gap-2'>
+                  {awardEditIndex !== null ? (
+                    <>
+                      <button
+                        type='button'
+                        onClick={handleCancelAwardEdit}
+                        className='px-3 py-1 bg-gray-300 text-black rounded-xl text-sm'
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type='button'
+                        onClick={handleSaveAwardDraft}
+                        disabled={!awardDraft.title?.trim()}
+                        className='px-3 py-1 bg-blue-600 text-white rounded-xl text-sm disabled:opacity-50'
+                      >
+                        Update Award
+                      </button>
+                    </>
+                  ) : (
+                    <button
+                      type='button'
+                      onClick={handleSaveAwardDraft}
+                      disabled={!awardDraft.title?.trim()}
+                      className='px-3 py-1 bg-green-600 text-white rounded-xl text-sm disabled:opacity-50'
+                    >
+                      Add Award
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Awards list */}
+              {(formData as any).awards && (formData as any).awards.length > 0 ? (
+                <div className='overflow-x-auto'>
+                  <table className='w-full text-left border-collapse'>
+                    <thead>
+                      <tr className='text-sm text-gray-600 dark:text-gray-300'>
+                        <th className='py-2 pr-4'>#</th>
+                        <th className='py-2 pr-4'>Title</th>
+                        <th className='py-2 pr-4'>Category</th>
+                        <th className='py-2 pr-4'>Year</th>
+                        <th className='py-2 pr-4'>Organization</th>
+                        <th className='py-2 pr-4'>Work</th>
+                        <th className='py-2 pr-4'>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {(formData as any).awards.map((a: any, idx: number) => (
+                        <tr key={idx} className='border-t border-gray-100 dark:border-gray-800'>
+                          <td className='py-2 pr-4 text-sm'>{idx + 1}</td>
+                          <td className='py-2 pr-4 text-sm'>{a.title}</td>
+                          <td className='py-2 pr-4 text-sm'>{a.category}</td>
+                          <td className='py-2 pr-4 text-sm'>{a.year}</td>
+                          <td className='py-2 pr-4 text-sm'>{a.organization}</td>
+                          <td className='py-2 pr-4 text-sm'>{a.work}</td>
+                          <td className='py-2 pr-4 text-sm'>
+                            <button
+                              type='button'
+                              onClick={() => handleEditAwardFromList(idx)}
+                              className='mr-2 px-2 py-1 bg-yellow-500 text-white rounded-lg text-xs'
+                            >
+                              Edit
+                            </button>
+                            <button
+                              type='button'
+                              onClick={() => handleRemoveAward(idx)}
+                              className='px-2 py-1 bg-red-600 text-white rounded-lg text-xs'
+                            >
+                              Delete
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <p className='text-sm text-gray-500'>No awards added yet.</p>
+              )}
             </div>
           )}
 
