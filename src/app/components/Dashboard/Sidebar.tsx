@@ -175,7 +175,6 @@ export default function Sidebar({ isMobileMenuOpen, setIsMobileMenuOpen }: Sideb
   const pathname = usePathname()
   const { user } = useAuth()
   const [openSubmenu, setOpenSubmenu] = useState<string | null>(null)
-  console.log('Current user:', user)
   if (!user) return null
 
   let items: MenuItem[] = []

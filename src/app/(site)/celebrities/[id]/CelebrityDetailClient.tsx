@@ -38,7 +38,7 @@ const CelebrityDetailClient = ({ celebrity, educationList }: CelebrityDetailClie
                 Early Life
               </h2>
               <div
-                className='text-lg text-gray-700 leading-relaxed prose prose-lg max-w-none'
+                className='text-lg text-gray-700 leading-relaxed prose prose-lg max-w-none break-words whitespace-normal'
                 dangerouslySetInnerHTML={{ __html: celebrity.earlyLife }}
               />
             </div>
@@ -52,7 +52,7 @@ const CelebrityDetailClient = ({ celebrity, educationList }: CelebrityDetailClie
                 Personal Life
               </h2>
               <div
-                className='text-lg text-gray-700 leading-relaxed prose prose-lg max-w-none'
+                className='text-lg text-gray-700 leading-relaxed prose prose-lg max-w-none break-words whitespace-normal'
                 dangerouslySetInnerHTML={{ __html: celebrity.personalLife }}
               />
             </div>
@@ -67,7 +67,7 @@ const CelebrityDetailClient = ({ celebrity, educationList }: CelebrityDetailClie
                 Career
               </h2>
               <div
-                className='text-lg text-gray-700 leading-relaxed prose prose-lg max-w-none'
+                className='text-lg text-gray-700 leading-relaxed prose prose-lg max-w-none break-words whitespace-normal'
                 dangerouslySetInnerHTML={{ __html: celebrity.career }}
               />
             </div>

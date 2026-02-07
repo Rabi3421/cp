@@ -82,7 +82,7 @@ async function getCelebrity(slug: string) {
 const CelebrityDetailPage = async ({ params }: { params: Promise<{ id: string }> }) => {
   const { id } = await params
   const celebrity = await getCelebrity(id)
-
+  console.log('Fetched celebrity data:', celebrity)
   if (!celebrity) {
     notFound()
   }
@@ -206,7 +206,7 @@ const CelebrityDetailPage = async ({ params }: { params: Promise<{ id: string }>
               {celebrity.introduction && (
                 <div className='bg-white rounded-2xl p-8 shadow-xl'>
                   <div 
-                    className='text-lg text-gray-700 leading-relaxed prose prose-lg max-w-none'
+                    className='text-lg text-gray-700 leading-relaxed prose prose-lg max-w-none break-words whitespace-normal'
                     dangerouslySetInnerHTML={{ __html: celebrity.introduction }}
                   />
                 </div>
@@ -245,11 +245,11 @@ const CelebrityDetailPage = async ({ params }: { params: Promise<{ id: string }>
                     </div>
                   </div>
                 </div>
-                {/* Featured image (moved below Contents) */}
-                <div className='mt-6'>
-                  <div className='relative w-full h-44 md:h-56 lg:h-64 rounded-2xl overflow-hidden shadow-lg'>
+                {/* Featured image (full-bleed, taller) */}
+                <div className='mt-6 -mx-4 sm:-mx-6 md:-mx-8 lg:mx-0'>
+                  <div className='relative w-full h-64 md:h-96 lg:h-[520px] rounded-2xl overflow-hidden shadow-lg'>
                     <Image
-                      src={celebrity.coverImage || celebrity.featuredImage || celebrity.profileImage || '/images/placeholder.jpg'}
+                      src={celebrity.coverImage || '/images/placeholder.jpg'}
                       alt={`${celebrity.name} - featured`}
                       fill
                       className='object-cover'
@@ -289,84 +289,84 @@ const CelebrityDetailPage = async ({ params }: { params: Promise<{ id: string }>
                     {celebrity.born && (
                       <div className='flex items-start justify-between'>
                         <span className='text-gray-500'>Born:</span>
-                        <span className='font-semibold text-right'>{celebrity.born}</span>
+                        <span className='font-semibold text-right break-words max-w-[65%] whitespace-normal'>{celebrity.born}</span>
                       </div>
                     )}
 
                     {celebrity.birthPlace && (
                       <div className='flex items-start justify-between'>
                         <span className='text-gray-500'>Birth Place:</span>
-                        <span className='font-semibold text-right'>{celebrity.birthPlace}</span>
+                        <span className='font-semibold text-right break-words max-w-[65%] whitespace-normal'>{celebrity.birthPlace}</span>
                       </div>
                     )}
 
                     {celebrity.age && (
                       <div className='flex items-start justify-between'>
                         <span className='text-gray-500'>Age:</span>
-                        <span className='font-semibold text-right'>{celebrity.age}</span>
+                        <span className='font-semibold text-right break-words max-w-[65%] whitespace-normal'>{celebrity.age}</span>
                       </div>
                     )}
 
                     {celebrity.nationality && (
                       <div className='flex items-start justify-between'>
                         <span className='text-gray-500'>Nationality:</span>
-                        <span className='font-semibold text-right'>{celebrity.nationality}</span>
+                        <span className='font-semibold text-right break-words max-w-[65%] whitespace-normal'>{celebrity.nationality}</span>
                       </div>
                     )}
 
                     {(celebrity.occupation || celebrity.profession) && (
                       <div className='flex items-start justify-between'>
                         <span className='text-gray-500'>Occupation:</span>
-                        <span className='font-semibold text-right'>{professions}</span>
+                        <span className='font-semibold text-right break-words max-w-[65%] whitespace-normal'>{professions}</span>
                       </div>
                     )}
 
                     {celebrity.yearsActive && (
                       <div className='flex items-start justify-between'>
                         <span className='text-gray-500'>Years active:</span>
-                        <span className='font-semibold text-right'>{celebrity.yearsActive}</span>
+                        <span className='font-semibold text-right break-words max-w-[65%] whitespace-normal'>{celebrity.yearsActive}</span>
                       </div>
                     )}
 
                     {celebrity.height && (
                       <div className='flex items-start justify-between'>
                         <span className='text-gray-500'>Height:</span>
-                        <span className='font-semibold text-right'>{celebrity.height}</span>
+                        <span className='font-semibold text-right break-words max-w-[65%] whitespace-normal'>{celebrity.height}</span>
                       </div>
                     )}
 
                     {celebrity.netWorth && (
                       <div className='flex items-start justify-between'>
                         <span className='text-gray-500'>Net Worth:</span>
-                        <span className='font-semibold text-right'>{celebrity.netWorth}</span>
+                        <span className='font-semibold text-right break-words max-w-[65%] whitespace-normal'>{celebrity.netWorth}</span>
                       </div>
                     )}
                     {/* Family details moved here */}
                     {celebrity.spouse && (
                       <div className='flex items-start justify-between'>
                         <span className='text-gray-500'>Spouse:</span>
-                        <span className='font-semibold text-right'>{celebrity.spouse}</span>
+                        <span className='font-semibold text-right break-words max-w-[65%] whitespace-normal'>{celebrity.spouse}</span>
                       </div>
                     )}
 
                     {celebrity.children && celebrity.children.length > 0 && (
                       <div className='flex items-start justify-between'>
                         <span className='text-gray-500'>Children:</span>
-                        <span className='font-semibold text-right'>{celebrity.children.join(', ')}</span>
+                        <span className='font-semibold text-right break-words max-w-[65%] whitespace-normal'>{celebrity.children.join(', ')}</span>
                       </div>
                     )}
 
                     {celebrity.parents && celebrity.parents.length > 0 && (
                       <div className='flex items-start justify-between'>
                         <span className='text-gray-500'>Parents:</span>
-                        <span className='font-semibold text-right'>{celebrity.parents.join(', ')}</span>
+                        <span className='font-semibold text-right break-words max-w-[65%] whitespace-normal'>{celebrity.parents.join(', ')}</span>
                       </div>
                     )}
 
                     {celebrity.siblings && celebrity.siblings.length > 0 && (
                       <div className='flex items-start justify-between'>
                         <span className='text-gray-500'>Siblings:</span>
-                        <span className='font-semibold text-right'>{celebrity.siblings.join(', ')}</span>
+                        <span className='font-semibold text-right break-words max-w-[65%] whitespace-normal'>{celebrity.siblings.join(', ')}</span>
                       </div>
                     )}
 
@@ -374,7 +374,7 @@ const CelebrityDetailPage = async ({ params }: { params: Promise<{ id: string }>
                     {educationList && educationList.length > 0 && (
                       <div className='flex items-start justify-between'>
                         <span className='text-gray-500'>Education:</span>
-                        <span className='font-semibold text-right'>{educationList.join(', ')}</span>
+                        <span className='font-semibold text-right break-words max-w-[65%] whitespace-normal'>{educationList.join(', ')}</span>
                       </div>
                     )}
 
@@ -382,31 +382,31 @@ const CelebrityDetailPage = async ({ params }: { params: Promise<{ id: string }>
                     {celebrity.height && (
                       <div className='flex items-start justify-between'>
                         <span className='text-gray-500'>Height:</span>
-                        <span className='font-semibold text-right'>{celebrity.height}</span>
+                        <span className='font-semibold text-right break-words max-w-[65%] whitespace-normal'>{celebrity.height}</span>
                       </div>
                     )}
                     {celebrity.weight && (
                       <div className='flex items-start justify-between'>
                         <span className='text-gray-500'>Weight:</span>
-                        <span className='font-semibold text-right'>{celebrity.weight}</span>
+                        <span className='font-semibold text-right break-words max-w-[65%] whitespace-normal'>{celebrity.weight}</span>
                       </div>
                     )}
                     {celebrity.eyeColor && (
                       <div className='flex items-start justify-between'>
                         <span className='text-gray-500'>Eye Color:</span>
-                        <span className='font-semibold text-right'>{celebrity.eyeColor}</span>
+                        <span className='font-semibold text-right break-words max-w-[65%] whitespace-normal'>{celebrity.eyeColor}</span>
                       </div>
                     )}
                     {celebrity.hairColor && (
                       <div className='flex items-start justify-between'>
                         <span className='text-gray-500'>Hair Color:</span>
-                        <span className='font-semibold text-right'>{celebrity.hairColor}</span>
+                        <span className='font-semibold text-right break-words max-w-[65%] whitespace-normal'>{celebrity.hairColor}</span>
                       </div>
                     )}
                     {celebrity.bodyMeasurements && (
                       <div className='flex items-start justify-between'>
                         <span className='text-gray-500'>Body Measurements:</span>
-                        <span className='font-semibold text-right'>{celebrity.bodyMeasurements}</span>
+                        <span className='font-semibold text-right break-words max-w-[65%] whitespace-normal'>{celebrity.bodyMeasurements}</span>
                       </div>
                     )}
                   </div>

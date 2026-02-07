@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
         .sort({ isFeatured: -1, viewCount: -1, createdAt: -1 })
         .skip(skip)
         .limit(limit)
-        .select('name slug profileImage occupation profession categories birthDate birthPlace nationality height netWorth socialMedia isFeatured isVerified viewCount shareCount')
+        .select('name slug profileImage coverImage occupation profession categories birthDate birthPlace nationality height netWorth socialMedia isFeatured isVerified viewCount shareCount')
         .lean(),
       Celebrity.countDocuments(query),
       Celebrity.find({ status: 'published', isFeatured: true })

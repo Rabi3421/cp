@@ -19,6 +19,13 @@ export async function GET(
       .select('-__v')
       .lean()
 
+    // Debug: log the fetched document keys and coverImage for troubleshooting
+    console.debug('Fetched celebrity for slug=', slug, {
+      id: celebrity?._id?.toString(),
+      hasCoverImage: !!celebrity?.coverImage,
+      coverImageValue: celebrity?.coverImage || '(empty)',
+    })
+
     if (!celebrity) {
       return NextResponse.json(
         { success: false, error: 'Celebrity not found' },

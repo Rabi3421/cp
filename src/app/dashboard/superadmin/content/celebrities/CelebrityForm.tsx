@@ -112,6 +112,9 @@ export default function CelebrityForm({
     },
   })
 
+  console.log('Form Data:', formData)
+  console.log('celebrity Data:', celebrity)
+
   const [bornIso, setBornIso] = useState('')
   const [diedIso, setDiedIso] = useState('')
   const [heightValue, setHeightValue] = useState('')
@@ -428,16 +431,90 @@ export default function CelebrityForm({
   useEffect(() => {
     if (celebrity) {
       setFormData({
-        ...formData,
-        ...celebrity,
-        // Ensure content fields are strings, not undefined
+        name: celebrity.name || '',
+        slug: celebrity.slug || '',
+        born: celebrity.born || '',
+        birthPlace: celebrity.birthPlace || '',
+        age: celebrity.age || 0,
+        nationality: celebrity.nationality || '',
+        died: celebrity.died || '',
+        citizenship: celebrity.citizenship || [],
+        profession: celebrity.profession || [],
+        yearsActive: celebrity.yearsActive || '',
+        height: celebrity.height || '',
+        weight: celebrity.weight || '',
+        bodyMeasurements: celebrity.bodyMeasurements || '',
+        eyeColor: celebrity.eyeColor || '',
+        hairColor: celebrity.hairColor || '',
+        spouse: celebrity.spouse || '',
+        children: celebrity.children || [],
+        parents: celebrity.parents || [],
+        siblings: celebrity.siblings || [],
+        relatives: celebrity.relatives || [],
+        education: celebrity.education || [],
+        netWorth: celebrity.netWorth || '',
         introduction: celebrity.introduction || '',
         earlyLife: celebrity.earlyLife || '',
         career: celebrity.career || '',
         personalLife: celebrity.personalLife || '',
         movies: celebrity.movies || [],
         awards: celebrity.awards || [],
+        profileImage: celebrity.profileImage || '',
+        coverImage: celebrity.coverImage || '',
+        categories: celebrity.categories || [],
+        tags: celebrity.tags || [],
+        status: celebrity.status || 'draft',
+        isFeatured: celebrity.isFeatured || false,
+        isVerified: celebrity.isVerified || false,
+        publishAt: celebrity.publishAt || null,
+        seo: {
+          metaTitle: celebrity.seo?.metaTitle || '',
+          metaDescription: celebrity.seo?.metaDescription || '',
+          metaKeywords: celebrity.seo?.metaKeywords || [],
+          canonicalUrl: celebrity.seo?.canonicalUrl || '',
+          noindex: celebrity.seo?.noindex || false,
+          nofollow: celebrity.seo?.nofollow || false,
+          robots: celebrity.seo?.robots || 'index, follow',
+          ogTitle: celebrity.seo?.ogTitle || '',
+          ogDescription: celebrity.seo?.ogDescription || '',
+          ogType: celebrity.seo?.ogType || 'profile',
+          ogSiteName: celebrity.seo?.ogSiteName || 'Celebrity Persona',
+          ogUrl: celebrity.seo?.ogUrl || '',
+          ogImages: celebrity.seo?.ogImages || [],
+          ogLocale: celebrity.seo?.ogLocale || 'en_US',
+          twitterCard: celebrity.seo?.twitterCard || 'summary_large_image',
+          twitterTitle: celebrity.seo?.twitterTitle || '',
+          twitterDescription: celebrity.seo?.twitterDescription || '',
+          twitterImage: celebrity.seo?.twitterImage || '',
+          twitterSite: celebrity.seo?.twitterSite || '',
+          twitterCreator: celebrity.seo?.twitterCreator || '',
+          schemaType: celebrity.seo?.schemaType || 'Person',
+          schemaJson: celebrity.seo?.schemaJson || null,
+          publishedTime: celebrity.seo?.publishedTime || '',
+          modifiedTime: celebrity.seo?.modifiedTime || '',
+          authorName: celebrity.seo?.authorName || '',
+          tags: celebrity.seo?.tags || [],
+          section: celebrity.seo?.section || '',
+          alternateLangs: celebrity.seo?.alternateLangs || [],
+          prevUrl: celebrity.seo?.prevUrl || '',
+          nextUrl: celebrity.seo?.nextUrl || '',
+          canonicalAlternates: celebrity.seo?.canonicalAlternates || [],
+          focusKeyword: celebrity.seo?.focusKeyword || '',
+          structuredDataDepth: celebrity.seo?.structuredDataDepth || 'full',
+          contentScore: celebrity.seo?.contentScore || 0,
+          readabilityScore: celebrity.seo?.readabilityScore || 0,
+          relatedTopics: celebrity.seo?.relatedTopics || [],
+          searchVolume: celebrity.seo?.searchVolume || 0,
+          authorUrl: celebrity.seo?.authorUrl || '',
+        },
+        socialMedia: {
+          instagram: celebrity.socialMedia?.instagram || '',
+          twitter: celebrity.socialMedia?.twitter || '',
+          facebook: celebrity.socialMedia?.facebook || '',
+          youtube: celebrity.socialMedia?.youtube || '',
+        },
       })
+      
       // try to populate ISO date input from existing stored value
       const toIso = (born: any) => {
         if (!born) return ''
@@ -464,6 +541,7 @@ export default function CelebrityForm({
 
       setBornIso(toIso(celebrity.born))
       setDiedIso(toIso(celebrity.died))
+      
       // initialize height and weight controls from existing celebrity values
       try {
         if (celebrity.height) {
@@ -475,12 +553,10 @@ export default function CelebrityForm({
             const cm = parseFloat(cmMatch[1])
             setHeightUnit('cm')
             setHeightValue(String(Math.round(cm)))
-            handleChange('height', formatHeightDisplay(String(Math.round(cm)), 'cm'))
           } else if (inMatch) {
             const inch = parseFloat(inMatch[1])
             setHeightUnit('in')
             setHeightValue(String(inch))
-            handleChange('height', formatHeightDisplay(String(inch), 'in'))
           }
         }
 
@@ -492,17 +568,16 @@ export default function CelebrityForm({
             const kg = parseFloat(kgMatch[1])
             setWeightUnit('kg')
             setWeightValue(String(kg))
-            handleChange('weight', formatWeightDisplay(String(kg), 'kg'))
           } else if (lbMatch) {
             const lb = parseFloat(lbMatch[1])
             setWeightUnit('lb')
             setWeightValue(String(lb))
-            handleChange('weight', formatWeightDisplay(String(lb), 'lb'))
           }
         }
       } catch (err) {
         // ignore parse errors during init
       }
+      
       // parse yearsActive like '2011–Present' or '2011-2015' or '2011–2015'
       try {
         if (celebrity.yearsActive) {
@@ -1452,8 +1527,8 @@ export default function CelebrityForm({
                         </div>
 
                         <div className='flex justify-end gap-2 mt-4'>
-                          <button onClick={handleCancelCoverCrop} className='px-3 py-1 bg-gray-200 rounded'>Cancel</button>
-                          <button onClick={handleCropAndUpload} className='px-3 py-1 bg-blue-600 text-white rounded'>Crop & Upload</button>
+                          <button type='button' onClick={handleCancelCoverCrop} className='px-3 py-1 bg-gray-200 rounded'>Cancel</button>
+                          <button type='button' onClick={handleCropAndUpload} className='px-3 py-1 bg-blue-600 text-white rounded'>Crop & Upload</button>
                         </div>
                       </div>
                     </div>
