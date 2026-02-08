@@ -211,7 +211,7 @@ const CelebrityDetailPage = async ({ params }: { params: Promise<{ id: string }>
                   />
                   
                   {/* Add a gallery image after introduction if available */}
-                  {celebrity.galleryImages && celebrity.galleryImages.length > 0 && (
+                  {/* {celebrity.galleryImages && celebrity.galleryImages.length > 0 && (
                     <div className='mt-8 -mx-8 sm:-mx-4 md:mx-0'>
                       <div className='relative w-full h-64 md:h-80 rounded-2xl overflow-hidden shadow-lg'>
                         <Image
@@ -222,7 +222,7 @@ const CelebrityDetailPage = async ({ params }: { params: Promise<{ id: string }>
                         />
                       </div>
                     </div>
-                  )}
+                  )} */}
                 </div>
               )}
 
@@ -471,7 +471,7 @@ const CelebrityDetailPage = async ({ params }: { params: Promise<{ id: string }>
       <CelebrityDetailClient celebrity={celebrity} educationList={educationList} />
 
       {/* Gallery Section */}
-      {celebrity.galleryImages && celebrity.galleryImages.length > 0 && (
+      {/* {celebrity.galleryImages && celebrity.galleryImages.length > 0 && (
         <section className='py-20 bg-grey'>
           <div className='container mx-auto max-w-7xl px-4'>
             <h2 className='text-3xl font-bold mb-8 flex items-center gap-3'>
@@ -492,7 +492,7 @@ const CelebrityDetailPage = async ({ params }: { params: Promise<{ id: string }>
             </div>
           </div>
         </section>
-      )}
+      )} */}
 
       {/* Related Outfits Section (for this celebrity) */}
       <section className='py-20 bg-white'>

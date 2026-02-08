@@ -1,4 +1,4 @@
- 'use client'
+"use client"
 import { Icon } from '@iconify/react'
 import Image from 'next/image'
 
@@ -7,43 +7,72 @@ interface CelebrityDetailClientProps {
   educationList: string[]
 }
 
-// Helper function to intelligently insert gallery images within content
+// Helper function to insert gallery images as a grouped grid (up to 4 images)
 const insertGalleryImagesInContent = (htmlContent: string, galleryImages: string[], celebrityName: string) => {
   if (!galleryImages || galleryImages.length === 0) return htmlContent
-  
+
   // Split content by paragraphs
   const paragraphs = htmlContent.split('</p>')
-  const totalParagraphs = paragraphs.length - 1 // Last split is empty
-  
+  const totalParagraphs = paragraphs.length - 1 // Last split is empty when content ends with </p>
+
   if (totalParagraphs < 2) return htmlContent // Not enough content to insert images
-  
+
   let result = ''
   let imageIndex = 0
-  
+
   paragraphs.forEach((paragraph, index) => {
     if (paragraph.trim()) {
       result += paragraph + '</p>'
-      
-      // Insert image after every 2-3 paragraphs
-      const shouldInsertImage = (index + 1) % 3 === 0 && imageIndex < galleryImages.length
-      
-      if (shouldInsertImage && index < totalParagraphs - 1) {
+
+      // Insert a grouped grid of images after every 3 paragraphs (if available)
+      const shouldInsertGalleryGrid = (index + 1) % 3 === 0 && imageIndex < galleryImages.length
+
+      if (shouldInsertGalleryGrid && index < totalParagraphs - 1) {
+        // Take up to 4 images for this group
+        const imagesToShow = galleryImages.slice(imageIndex, imageIndex + 4)
+
         result += `
-          <div class="my-8 -mx-4 sm:mx-0">
-            <div class="relative w-full h-64 md:h-80 rounded-2xl overflow-hidden shadow-lg">
-              <img 
-                src="${galleryImages[imageIndex]}" 
-                alt="${celebrityName} - Gallery Image ${imageIndex + 1}" 
-                class="w-full h-full object-cover"
-              />
+          <div class="my-10 -mx-4 sm:mx-0">
+            <div class="relative bg-gradient-to-r from-white to-gray-50 border border-gray-200 rounded-2xl p-6 md:p-8 shadow-2xl overflow-hidden">
+              <div class="absolute -top-6 right-6 bg-red-500 text-white text-xs font-bold px-3 py-1 rounded-md transform rotate-6 shadow-lg">AD</div>
+
+              <div class="flex flex-col md:flex-row items-stretch gap-6">
+                <div class="md:w-1/3 lg:w-1/4 bg-primary/5 rounded-lg p-4 flex flex-col justify-center">
+                  <div class="text-sm uppercase text-gray-500 tracking-wider">Promoted</div>
+                  <div class="mt-2 text-lg font-bold text-gray-900">This is my ad section</div>
+                  <p class="mt-2 text-sm text-gray-600">Hand-picked visuals and sponsored content curated to match this article.</p>
+                  <div class="mt-4">
+                    <a href="#gallery" class="relative inline-flex items-center rounded-full p-[2px] bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 hover:from-indigo-600 hover:via-purple-600 hover:to-pink-600 transition-shadow duration-300">
+                      <span class="flex items-center gap-2 bg-white text-indigo-600 px-4 py-2 rounded-full text-sm font-semibold shadow-sm hover:shadow-md transform transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0">
+                        <svg xmlns='http://www.w3.org/2000/svg' class='h-4 w-4 text-indigo-600' viewBox='0 0 20 20' fill='currentColor' aria-hidden='true'>
+                          <path fillRule='evenodd' d='M10.293 15.707a1 1 0 010-1.414L13.586 11H4a1 1 0 110-2h9.586l-3.293-3.293a1 1 0 111.414-1.414l5 5a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0z' clipRule='evenodd' />
+                        </svg>
+                        <span>Explore</span>
+                      </span>
+                    </a>
+                  </div>
+                </div>
+
+                <div class="md:flex-1 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 items-stretch">
+                  ${imagesToShow
+                    .map((img, i) => `
+                      <div class="relative rounded-xl overflow-hidden bg-white/60 shadow-sm">
+                        <img src="${img}" alt="${celebrityName} - Gallery ${imageIndex + i + 1}" class="w-full h-full object-cover transition-transform duration-300 hover:scale-105" />
+                        <div class="absolute bottom-2 left-2 bg-black/40 text-white text-xs px-2 py-1 rounded">Ad Image</div>
+                      </div>
+                    `)
+                    .join('')}
+                </div>
+              </div>
             </div>
           </div>
         `
-        imageIndex++
+
+        imageIndex += imagesToShow.length
       }
     }
   })
-  
+
   return result
 }
 
@@ -82,8 +111,8 @@ const CelebrityDetailClient = ({ celebrity, educationList }: CelebrityDetailClie
                 className='text-lg text-gray-700 leading-relaxed prose prose-lg max-w-none break-words whitespace-normal'
                 dangerouslySetInnerHTML={{ 
                   __html: insertGalleryImagesInContent(
-                    celebrity.earlyLife, 
-                    celebrity.galleryImages?.slice(0, 2) || [], 
+                    celebrity.earlyLife,
+                    celebrity.galleryImages?.slice(0, 4) || [],
                     celebrity.name
                   ) 
                 }}
@@ -102,8 +131,8 @@ const CelebrityDetailClient = ({ celebrity, educationList }: CelebrityDetailClie
                 className='text-lg text-gray-700 leading-relaxed prose prose-lg max-w-none break-words whitespace-normal'
                 dangerouslySetInnerHTML={{ 
                   __html: insertGalleryImagesInContent(
-                    celebrity.personalLife, 
-                    celebrity.galleryImages?.slice(2, 5) || [], 
+                    celebrity.personalLife,
+                    celebrity.galleryImages?.slice(4, 8) || [],
                     celebrity.name
                   ) 
                 }}
@@ -123,8 +152,8 @@ const CelebrityDetailClient = ({ celebrity, educationList }: CelebrityDetailClie
                 className='text-lg text-gray-700 leading-relaxed prose prose-lg max-w-none break-words whitespace-normal'
                 dangerouslySetInnerHTML={{ 
                   __html: insertGalleryImagesInContent(
-                    celebrity.career, 
-                    celebrity.galleryImages?.slice(5) || [], 
+                    celebrity.career,
+                    celebrity.galleryImages?.slice(8, 12) || [],
                     celebrity.name
                   ) 
                 }}
@@ -255,8 +284,6 @@ const CelebrityDetailClient = ({ celebrity, educationList }: CelebrityDetailClie
               </div>
             </div>
           )}
-
-          
 
           {/* Education and Physical Attributes moved to sidebar quick facts */}
         </div>
