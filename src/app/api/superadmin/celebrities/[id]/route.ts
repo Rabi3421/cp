@@ -63,6 +63,13 @@ export async function PUT(
 
     const body = await request.json()
 
+    // Debug: log the gallery images being sent
+    console.debug('Updating celebrity with ID=', id, {
+      hasGalleryImages: !!body.galleryImages,
+      galleryImagesLength: body.galleryImages?.length || 0,
+      galleryImagesValue: body.galleryImages || '(empty)',
+    })
+
     // If slug is being updated, check for duplicates
     if (body.slug) {
       const existingCelebrity = await Celebrity.findOne({

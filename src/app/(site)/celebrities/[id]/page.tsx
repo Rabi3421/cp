@@ -10,7 +10,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   try {
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
     const res = await fetch(`${baseUrl}/api/celebrities/${id}`, {
-      next: { revalidate: 3600 }, // Revalidate every hour
+      cache: 'no-store', // Disable caching for testing
     })
 
     if (!res.ok) {
@@ -64,7 +64,7 @@ async function getCelebrity(slug: string) {
   try {
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
     const res = await fetch(`${baseUrl}/api/celebrities/${slug}`, {
-      next: { revalidate: 3600 }, // Revalidate every hour
+      cache: 'no-store', // Disable caching for testing
     })
 
     if (!res.ok) {
@@ -209,6 +209,20 @@ const CelebrityDetailPage = async ({ params }: { params: Promise<{ id: string }>
                     className='text-lg text-gray-700 leading-relaxed prose prose-lg max-w-none break-words whitespace-normal'
                     dangerouslySetInnerHTML={{ __html: celebrity.introduction }}
                   />
+                  
+                  {/* Add a gallery image after introduction if available */}
+                  {celebrity.galleryImages && celebrity.galleryImages.length > 0 && (
+                    <div className='mt-8 -mx-8 sm:-mx-4 md:mx-0'>
+                      <div className='relative w-full h-64 md:h-80 rounded-2xl overflow-hidden shadow-lg'>
+                        <Image
+                          src={celebrity.galleryImages[0]}
+                          alt={`${celebrity.name} - Introduction Image`}
+                          fill
+                          className='object-cover'
+                        />
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 

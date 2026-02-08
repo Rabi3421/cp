@@ -58,6 +58,7 @@ export default function CelebrityForm({
     awards: [],
     profileImage: '',
     coverImage: '',
+    galleryImages: [],
     categories: [],
     tags: [],
     status: 'draft',
@@ -130,6 +131,10 @@ export default function CelebrityForm({
   const [previewCover, setPreviewCover] = useState<string>('')
   const [deletingProfile, setDeletingProfile] = useState(false)
   const [deletingCover, setDeletingCover] = useState(false)
+  // Gallery images state
+  const [galleryImages, setGalleryImages] = useState<string[]>([])
+  const [uploadingGallery, setUploadingGallery] = useState<{[key: string]: number}>({})
+  const [deletingGallery, setDeletingGallery] = useState<{[key: string]: boolean}>({})
   // Cover crop modal state
   const [coverCropOpen, setCoverCropOpen] = useState(false)
   const [coverCropSrc, setCoverCropSrc] = useState<string>('')
@@ -461,6 +466,7 @@ export default function CelebrityForm({
         awards: celebrity.awards || [],
         profileImage: celebrity.profileImage || '',
         coverImage: celebrity.coverImage || '',
+        galleryImages: celebrity.galleryImages || [],
         categories: celebrity.categories || [],
         tags: celebrity.tags || [],
         status: celebrity.status || 'draft',
@@ -597,6 +603,9 @@ export default function CelebrityForm({
       } catch (err) {
         // ignore
       }
+      
+      // Initialize gallery images
+      setGalleryImages(celebrity.galleryImages || [])
     }
   }, [celebrity])
 
@@ -634,6 +643,77 @@ export default function CelebrityForm({
     }
   }, [startYear, endYear, isPresent])
 
+  const handleGalleryUpload = async (files: FileList) => {
+    const folder = getFolderName()
+    if (!folder) {
+      window.alert('Please enter the celebrity name (full name) before uploading images so a folder can be created.')
+      return
+    }
+
+    const uploadPromises = Array.from(files).map(async (file) => {
+      const uploadId = Date.now() + Math.random()
+      const uploadKey = uploadId.toString()
+      
+      try {
+        setUploadingGallery(prev => ({ ...prev, [uploadKey]: 0 }))
+        const targetPath = `${folder}/gallery`
+        const url = await uploadToFirebase(file, targetPath, (pct) => {
+          setUploadingGallery(prev => ({ ...prev, [uploadKey]: pct }))
+        })
+        
+        setGalleryImages(prev => [...prev, url])
+        setFormData(prev => ({ 
+          ...prev, 
+          galleryImages: [...(prev.galleryImages || []), url] 
+        }))
+        
+        setUploadingGallery(prev => {
+          const updated = { ...prev }
+          delete updated[uploadKey]
+          return updated
+        })
+      } catch (err) {
+        console.error('Gallery upload error', err)
+        setUploadingGallery(prev => {
+          const updated = { ...prev }
+          delete updated[uploadKey]
+          return updated
+        })
+      }
+    })
+
+    await Promise.all(uploadPromises)
+  }
+
+  const handleRemoveGalleryImage = async (imageUrl: string, index: number) => {
+    const confirm = window.confirm('Remove this image? This will also delete it from Firebase if it was uploaded.')
+    if (!confirm) return
+    
+    try {
+      setDeletingGallery(prev => ({ ...prev, [imageUrl]: true }))
+      
+      // try deleting from firebase
+      if (/\/o\//.test(imageUrl)) {
+        try {
+          await deleteFromFirebaseByUrl(imageUrl)
+        } catch (err) {
+          console.warn('Failed to delete gallery image from Firebase', err)
+        }
+      }
+      
+      // remove from local state
+      const updatedImages = galleryImages.filter((_, i) => i !== index)
+      setGalleryImages(updatedImages)
+      setFormData(prev => ({ ...prev, galleryImages: updatedImages }))
+    } finally {
+      setDeletingGallery(prev => {
+        const updated = { ...prev }
+        delete updated[imageUrl]
+        return updated
+      })
+    }
+  }
+
   const handleChange = (field: string, value: any) => {
     if (field.includes('.')) {
       const [parent, child] = field.split('.')
@@ -663,6 +743,11 @@ export default function CelebrityForm({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+    console.debug('Submitting celebrity form with galleryImages:', {
+      hasGalleryImages: !!formData.galleryImages,
+      galleryImagesLength: formData.galleryImages?.length || 0,
+      galleryImagesValue: formData.galleryImages || '(empty)',
+    })
     onSave(formData)
   }
 
@@ -1806,6 +1891,90 @@ export default function CelebrityForm({
                     )}
                   </div>
                 </div>
+              </div>
+
+              <div>
+                <label className='block text-sm font-medium text-black dark:text-white mb-2'>
+                  Gallery Images
+                </label>
+                <p className='text-sm text-gray-600 dark:text-gray-400 mb-3'>
+                  Upload multiple images for the gallery section. These will be displayed throughout the content to increase engagement.
+                </p>
+                
+                <div
+                  onDragOver={(e) => e.preventDefault()}
+                  onDrop={(e) => {
+                    e.preventDefault()
+                    const files = e.dataTransfer?.files
+                    if (files) handleGalleryUpload(files)
+                  }}
+                  className='p-6 border-2 border-dashed border-gray-200 dark:border-gray-800 rounded-xl text-center'
+                >
+                  <div className='mb-4'>
+                    <Icon icon='mdi:cloud-upload' width='48' height='48' className='mx-auto text-gray-400 mb-2' />
+                    <p className='text-sm text-gray-600 dark:text-gray-400'>
+                      Drag & drop multiple images here, or
+                      <label className='ml-1 text-blue-600 underline cursor-pointer'>
+                        <input
+                          type='file'
+                          accept='image/*'
+                          multiple
+                          onChange={(e) => {
+                            const files = e.target.files
+                            if (files) handleGalleryUpload(files)
+                          }}
+                          className='hidden'
+                        />
+                        select files
+                      </label>
+                    </p>
+                  </div>
+                  
+                  {Object.keys(uploadingGallery).length > 0 && (
+                    <div className='mb-4'>
+                      <p className='text-sm text-blue-600 mb-2'>Uploading images...</p>
+                      {Object.entries(uploadingGallery).map(([key, progress]) => (
+                        <div key={key} className='bg-gray-200 rounded-full h-2 mb-1'>
+                          <div 
+                            className='bg-blue-600 h-2 rounded-full transition-all' 
+                            style={{ width: `${progress}%` }}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                
+                {galleryImages.length > 0 && (
+                  <div className='mt-4'>
+                    <h4 className='text-sm font-medium text-black dark:text-white mb-3'>
+                      Gallery Images ({galleryImages.length})
+                    </h4>
+                    <div className='grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4'>
+                      {galleryImages.map((imageUrl, index) => (
+                        <div key={index} className='relative group'>
+                          <img
+                            src={imageUrl}
+                            alt={`Gallery ${index + 1}`}
+                            className='w-full h-32 object-cover rounded-xl border border-gray-200 dark:border-gray-800'
+                          />
+                          <button
+                            type='button'
+                            onClick={() => handleRemoveGalleryImage(imageUrl, index)}
+                            disabled={deletingGallery[imageUrl]}
+                            className='absolute -top-2 -right-2 bg-red-600 text-white rounded-full w-7 h-7 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity'
+                            title='Remove'
+                          >
+                            {deletingGallery[imageUrl] ? '...' : '×'}
+                          </button>
+                          <div className='absolute bottom-2 left-2 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded'>
+                            {index + 1}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           )}

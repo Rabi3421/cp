@@ -16,14 +16,16 @@ export async function GET(
       status: 'published',
       isActive: true,
     })
-      .select('-__v')
       .lean()
 
-    // Debug: log the fetched document keys and coverImage for troubleshooting
+    // Debug: log the fetched document keys and gallery images for troubleshooting
     console.debug('Fetched celebrity for slug=', slug, {
       id: celebrity?._id?.toString(),
       hasCoverImage: !!celebrity?.coverImage,
       coverImageValue: celebrity?.coverImage || '(empty)',
+      hasGalleryImages: !!celebrity?.galleryImages,
+      galleryImagesLength: celebrity?.galleryImages?.length || 0,
+      galleryImagesValue: celebrity?.galleryImages || '(empty)',
     })
 
     if (!celebrity) {

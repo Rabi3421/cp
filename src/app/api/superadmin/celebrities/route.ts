@@ -124,6 +124,13 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json()
 
+    // Debug: log the gallery images being sent
+    console.debug('Creating celebrity', {
+      hasGalleryImages: !!body.galleryImages,
+      galleryImagesLength: body.galleryImages?.length || 0,
+      galleryImagesValue: body.galleryImages || '(empty)',
+    })
+
     // Generate slug from name if not provided
     if (!body.slug && body.name) {
       body.slug = body.name

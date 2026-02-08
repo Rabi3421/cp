@@ -1,9 +1,50 @@
  'use client'
 import { Icon } from '@iconify/react'
+import Image from 'next/image'
 
 interface CelebrityDetailClientProps {
   celebrity: any
   educationList: string[]
+}
+
+// Helper function to intelligently insert gallery images within content
+const insertGalleryImagesInContent = (htmlContent: string, galleryImages: string[], celebrityName: string) => {
+  if (!galleryImages || galleryImages.length === 0) return htmlContent
+  
+  // Split content by paragraphs
+  const paragraphs = htmlContent.split('</p>')
+  const totalParagraphs = paragraphs.length - 1 // Last split is empty
+  
+  if (totalParagraphs < 2) return htmlContent // Not enough content to insert images
+  
+  let result = ''
+  let imageIndex = 0
+  
+  paragraphs.forEach((paragraph, index) => {
+    if (paragraph.trim()) {
+      result += paragraph + '</p>'
+      
+      // Insert image after every 2-3 paragraphs
+      const shouldInsertImage = (index + 1) % 3 === 0 && imageIndex < galleryImages.length
+      
+      if (shouldInsertImage && index < totalParagraphs - 1) {
+        result += `
+          <div class="my-8 -mx-4 sm:mx-0">
+            <div class="relative w-full h-64 md:h-80 rounded-2xl overflow-hidden shadow-lg">
+              <img 
+                src="${galleryImages[imageIndex]}" 
+                alt="${celebrityName} - Gallery Image ${imageIndex + 1}" 
+                class="w-full h-full object-cover"
+              />
+            </div>
+          </div>
+        `
+        imageIndex++
+      }
+    }
+  })
+  
+  return result
 }
 
 const CelebrityDetailClient = ({ celebrity, educationList }: CelebrityDetailClientProps) => {
@@ -39,7 +80,13 @@ const CelebrityDetailClient = ({ celebrity, educationList }: CelebrityDetailClie
               </h2>
               <div
                 className='text-lg text-gray-700 leading-relaxed prose prose-lg max-w-none break-words whitespace-normal'
-                dangerouslySetInnerHTML={{ __html: celebrity.earlyLife }}
+                dangerouslySetInnerHTML={{ 
+                  __html: insertGalleryImagesInContent(
+                    celebrity.earlyLife, 
+                    celebrity.galleryImages?.slice(0, 2) || [], 
+                    celebrity.name
+                  ) 
+                }}
               />
             </div>
           )}
@@ -53,7 +100,13 @@ const CelebrityDetailClient = ({ celebrity, educationList }: CelebrityDetailClie
               </h2>
               <div
                 className='text-lg text-gray-700 leading-relaxed prose prose-lg max-w-none break-words whitespace-normal'
-                dangerouslySetInnerHTML={{ __html: celebrity.personalLife }}
+                dangerouslySetInnerHTML={{ 
+                  __html: insertGalleryImagesInContent(
+                    celebrity.personalLife, 
+                    celebrity.galleryImages?.slice(2, 5) || [], 
+                    celebrity.name
+                  ) 
+                }}
               />
             </div>
           )}
@@ -68,7 +121,13 @@ const CelebrityDetailClient = ({ celebrity, educationList }: CelebrityDetailClie
               </h2>
               <div
                 className='text-lg text-gray-700 leading-relaxed prose prose-lg max-w-none break-words whitespace-normal'
-                dangerouslySetInnerHTML={{ __html: celebrity.career }}
+                dangerouslySetInnerHTML={{ 
+                  __html: insertGalleryImagesInContent(
+                    celebrity.career, 
+                    celebrity.galleryImages?.slice(5) || [], 
+                    celebrity.name
+                  ) 
+                }}
               />
             </div>
           )}
