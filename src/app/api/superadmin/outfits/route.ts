@@ -126,6 +126,50 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json()
 
+    // Ensure seo has expected structure with defaults
+    const defaultSeo = {
+      metaTitle: '',
+      metaDescription: '',
+      metaKeywords: [],
+      canonicalUrl: '',
+      noindex: false,
+      nofollow: false,
+      robots: 'index, follow',
+      ogTitle: '',
+      ogDescription: '',
+      ogType: 'product',
+      ogSiteName: 'Celebrity Persona',
+      ogUrl: '',
+      ogImages: [],
+      ogLocale: 'en_US',
+      twitterCard: 'summary_large_image',
+      twitterTitle: '',
+      twitterDescription: '',
+      twitterImage: '',
+      twitterSite: '@celebritypersona',
+      twitterCreator: '@celebritypersona',
+      schemaType: 'Product',
+      schemaJson: null,
+      publishedTime: '',
+      modifiedTime: '',
+      authorName: '',
+      tags: [],
+      section: 'Celebrity Outfits',
+      alternateLangs: [],
+      prevUrl: '',
+      nextUrl: '',
+      canonicalAlternates: [],
+      focusKeyword: '',
+      structuredDataDepth: 'minimal',
+      contentScore: 0,
+      readabilityScore: 0,
+      relatedTopics: [],
+      searchVolume: 0,
+      authorUrl: '',
+    }
+
+    body.seo = { ...(body.seo || {}), ...defaultSeo }
+
     // Generate slug from title if not provided
     if (!body.slug && body.title) {
       body.slug = body.title
